@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Basic HTML Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-button {
+            padding: 15px 30px;
+            margin: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .test-button:hover {
+            background: #0056b3;
+        }
+
+        .test-button:active {
+            background: #004085;
+        }
+
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 Basic HTML Interaction Test</h1>
+        <p>This tests if basic HTML functionality works in your browser.</p>
+
+        <div class="result info">
+            If you can click the buttons below and see responses, your browser and basic HTML work fine.
+        </div>
+
+        <div style="text-align: center;">
+            <button class="test-button" onclick="testClick()">
+                🖱️ Test Click
+            </button>
+            <button class="test-button" onclick="testInput()">
+                ⌨️ Test Input
+            </button>
+            <button class="test-button" onclick="testAnimation()">
+                🎬 Test Animation
+            </button>
+            <button class="test-button" onclick="testConsole()">
+                📝 Test Console
+            </button>
+        </div>
+
+        <div id="result" class="result info">
+            Click a button above to test functionality...
+        </div>
+
+        <div id="log" class="log">
+            <div>Console log will appear here...</div>
+        </div>
+
+        <div style="margin-top: 30px; padding: 15px; background: #fff3cd; border-radius: 4px;">
+            <h3>📋 Test Results:</h3>
+            <ul>
+                <li><strong>HTML Buttons:</strong> <span id="html-test">❓ Not tested</span></li>
+                <li><strong>JavaScript:</strong> <span id="js-test">❓ Not tested</span></li>
+                <li><strong>CSS Styling:</strong> <span id="css-test">❓ Not tested</span></li>
+                <li><strong>Console Logging:</strong> <span id="console-test">❓ Not tested</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let testResults = {
+            html: false,
+            js: false,
+            css: false,
+            console: false
+        };
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                info: '#0c5460',
+                success: '#155724',
+                error: '#721c24',
+                warning: '#856404'
+            };
+            logDiv.innerHTML += `<div style="color: ${colors[type]};">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function updateResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${type}`;
+        }
+
+        function updateTestStatus(test, status) {
+            const span = document.getElementById(`${test}-test`);
+            span.textContent = status ? '✅ Working' : '❌ Failed';
+            span.style.color = status ? '#155724' : '#721c24';
+        }
+
+        function testClick() {
+            log('Testing HTML button click...');
+            testResults.html = true;
+            updateTestStatus('html', true);
+            updateResult('✅ HTML Button Click Works! Your browser can handle basic interactions.', 'success');
+            log('HTML button click test passed', 'success');
+        }
+
+        function testInput() {
+            log('Testing JavaScript input handling...');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = 'Test Input';
+
+            if (input.value === 'Test Input') {
+                testResults.js = true;
+                updateTestStatus('js', true);
+                updateResult('✅ JavaScript Input Handling Works!', 'success');
+                log('JavaScript input test passed', 'success');
+            } else {
+                updateResult('❌ JavaScript Input Test Failed', 'error');
+                log('JavaScript input test failed', 'error');
+            }
+        }
+
+        function testAnimation() {
+            log('Testing CSS animations...');
+            const button = event.target;
+            button.style.transform = 'scale(1.1)';
+            button.style.transition = 'transform 0.3s';
+
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+                testResults.css = true;
+                updateTestStatus('css', true);
+                updateResult('✅ CSS Animations Work!', 'success');
+                log('CSS animation test passed', 'success');
+            }, 300);
+        }
+
+        function testConsole() {
+            log('Testing console logging...');
+            console.log('Test console message');
+            console.warn('Test console warning');
+            console.error('Test console error');
+
+            testResults.console = true;
+            updateTestStatus('console', true);
+            updateResult('✅ Console Logging Works! Check browser console (F12) for test messages.', 'success');
+            log('Console logging test passed', 'success');
+        }
+
+        // Initialize
+        window.addEventListener('load', function () {
+            log('Basic HTML test page loaded successfully');
+            updateResult('Ready for testing! Click the buttons above.', 'info');
+
+            // Test if CSS is working by checking computed styles
+            const testDiv = document.createElement('div');
+            testDiv.style.display = 'none';
+            document.body.appendChild(testDiv);
+            const computedStyle = window.getComputedStyle(testDiv);
+            if (computedStyle.display === 'none') {
+                log('CSS is working correctly', 'success');
+            }
+            document.body.removeChild(testDiv);
+        });
+
+        // Global error handler
+        window.addEventListener('error', function (e) {
+            log(`Global error: ${e.message}`, 'error');
+        });
+    </script>
+</body>
+
+</html>

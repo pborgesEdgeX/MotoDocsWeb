@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base href="/">
+    <meta charset="UTF-8">
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+    <meta name="description" content="MotoDocs AI - AI-powered motorcycle documentation and diagnostic system">
+    <title>MotoDocs AI</title>
+</head>
+
+<body>
+    <script src="flutter.js" defer></script>
+    <script>
+        window.addEventListener('load', function (ev) {
+            // Download main.dart.js
+            _flutter.loader.load({
+                serviceWorker: {
+                    serviceWorkerVersion: null,
+                },
+                onEntrypointLoaded: function (engineInitializer) {
+                    engineInitializer.initializeEngine().then(function (appRunner) {
+                        appRunner.runApp();
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

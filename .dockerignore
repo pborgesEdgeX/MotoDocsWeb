@@ -1,0 +1,50 @@
+# Flutter build artifacts
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+test/
+coverage/
+.test_coverage.dart
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Misc
+*.log
+*.html
+!web/*.html
+
+# Android & iOS (not needed for web)
+android/
+ios/
+macos/
+linux/
+windows/
+
+# Scripts
+scripts/

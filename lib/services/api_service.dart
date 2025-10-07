@@ -60,6 +60,16 @@ class ApiService {
     }
   }
 
+  Future<List<String>> getBikeModels() async {
+    try {
+      final response = await _dio.get('/api/v1/documents/bike-models');
+      final List<dynamic> modelsJson = response.data ?? [];
+      return modelsJson.map((model) => model.toString()).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch bike models: $e');
+    }
+  }
+
   Future<Document> createDocument({
     required String name,
     required String mimeType,

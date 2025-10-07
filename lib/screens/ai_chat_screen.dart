@@ -18,9 +18,11 @@ class _AIChatScreenState extends State<AIChatScreen> {
   final _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
-  String? _selectedBikeModel;
+  String _selectedBikeModel = ''; // Now required, starts empty
   String _currentLoadingPhrase = '';
   Timer? _phraseTimer;
+  List<String> _availableBikeModels = [];
+  bool _loadingBikeModels = true;
 
   final List<String> _loadingPhrases = [
     '🔍 Searching through service manuals...',
@@ -39,6 +41,32 @@ class _AIChatScreenState extends State<AIChatScreen> {
   void initState() {
     super.initState();
     _addWelcomeMessage();
+    _loadBikeModels();
+  }
+
+  Future<void> _loadBikeModels() async {
+    try {
+      final apiService = context.read<ApiService>();
+      final authService = context.read<AuthService>();
+
+      // Get auth token
+      final token = await authService.getIdToken();
+      if (token != null) {
+        apiService.setAuthToken(token);
+        final models = await apiService.getBikeModels();
+        setState(() {
+          _availableBikeModels = models;
+          _loadingBikeModels = false;
+          // Set first model as default if available
+          if (models.isNotEmpty) {
+            _selectedBikeModel = models.first;
+          }
+        });
+      }
+    } catch (e) {
+      setState(() => _loadingBikeModels = false);
+      print('Error loading bike models: $e');
+    }
   }
 
   @override
@@ -70,7 +98,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     _messages.add(
       ChatMessage(
         text:
-            "Hello! I'm your MotoDocs AI assistant. Ask me anything about your motorcycle manuals and I'll help you find the information you need.",
+            "Hello! I'm your MotoDocs AI assistant. 🏍️\n\nFirst, select your motorcycle model from the dropdown above. Then ask me anything about maintenance, repairs, or troubleshooting - I'll search through the relevant service manuals to help you!",
         isUser: false,
         timestamp: DateTime.now(),
       ),
@@ -80,6 +108,17 @@ class _AIChatScreenState extends State<AIChatScreen> {
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty || _isLoading) return;
+
+    // Validate bike model is selected
+    if (_selectedBikeModel.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a motorcycle model first'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
 
     // Add user message
     setState(() {
@@ -105,10 +144,10 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
       apiService.setAuthToken(token);
 
-      // Send query to AI
+      // Send query to AI (bike model is now required)
       final result = await apiService.getSuggestion(
         query: text,
-        bikeModel: _selectedBikeModel,
+        bikeModel: _selectedBikeModel, // Always has a value now
       );
 
       // Format structured RAG response
@@ -222,7 +261,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Bike Model Filter
+        // Bike Model Filter (Required Dropdown)
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -233,26 +272,66 @@ class _AIChatScreenState extends State<AIChatScreen> {
             children: [
               const Icon(Icons.motorcycle, color: Colors.blue),
               const SizedBox(width: 8),
-              const Text('Filter by Bike Model:'),
+              const Text(
+                'Motorcycle Model:',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                '(Required)',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
               const SizedBox(width: 8),
               Expanded(
-                child: TextFormField(
-                  decoration: const InputDecoration(
-                    hintText: 'e.g., Honda CBR600RR',
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedBikeModel = value.trim().isEmpty
-                          ? null
-                          : value.trim();
-                    });
-                  },
-                ),
+                child: _loadingBikeModels
+                    ? const Row(
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Loading models...'),
+                        ],
+                      )
+                    : _availableBikeModels.isEmpty
+                        ? const Text(
+                            'No bike models available',
+                            style: TextStyle(color: Colors.red),
+                          )
+                        : DropdownButtonFormField<String>(
+                            value: _selectedBikeModel.isEmpty
+                                ? null
+                                : _selectedBikeModel,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                            hint: const Text('Select a motorcycle model'),
+                            isExpanded: true,
+                            items: _availableBikeModels
+                                .map((model) => DropdownMenuItem(
+                                      value: model,
+                                      child: Text(
+                                        model,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedBikeModel = value ?? '';
+                              });
+                            },
+                          ),
               ),
             ],
           ),

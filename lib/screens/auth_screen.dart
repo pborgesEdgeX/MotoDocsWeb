@@ -54,7 +54,9 @@ class _AuthScreenState extends State<AuthScreen> {
             .timeout(
               const Duration(seconds: 30),
               onTimeout: () {
-                throw Exception('Sign in timed out. Please check your connection.');
+                throw Exception(
+                  'Sign in timed out. Please check your connection.',
+                );
               },
             );
         print('DEBUG: Sign in successful');
@@ -68,8 +70,12 @@ class _AuthScreenState extends State<AuthScreen> {
         print('DEBUG: Sign up successful');
       }
 
-      // Success - auth state will trigger navigation via StreamBuilder
-      // No need to do anything here, the AuthWrapper will handle it
+      // Force navigation to home screen after successful authentication
+      print('DEBUG: Forcing navigation to /home...');
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
+        print('DEBUG: Navigated to /home');
+      }
     } catch (e) {
       print('DEBUG: Auth error: $e');
       if (mounted) {
@@ -213,7 +219,9 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -246,7 +254,9 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -294,7 +304,9 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -371,7 +383,9 @@ class _AuthScreenState extends State<AuthScreen> {
                             TextButton(
                               onPressed: _isLoading ? null : _toggleMode,
                               style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
                               ),
                               child: Text(
                                 _isSignIn ? 'Sign Up' : 'Sign In',

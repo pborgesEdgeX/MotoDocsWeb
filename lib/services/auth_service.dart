@@ -102,9 +102,23 @@ class AuthService extends ChangeNotifier {
   // Sign out
   Future<void> signOut() async {
     try {
+      print('═' * 80);
+      print('🔓 AuthService.signOut() called');
+      print('   Current user: ${auth.currentUser?.email}');
+      print('═' * 80);
+
       await auth.signOut();
+      print('✅ Firebase auth.signOut() completed');
+      print('   Current user after signOut: ${auth.currentUser}');
+
+      print('📢 Calling notifyListeners()...');
       notifyListeners();
+      print('✅ notifyListeners() completed');
+      print('═' * 80);
     } catch (e) {
+      print('═' * 80);
+      print('❌ AuthService.signOut() ERROR: $e');
+      print('═' * 80);
       throw Exception('Sign out failed: $e');
     }
   }

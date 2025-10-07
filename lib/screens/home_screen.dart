@@ -296,19 +296,54 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _signOut() async {
+    print('═' * 80);
+    print('🚪 SIGN OUT INITIATED');
+    print('═' * 80);
+
+    // Show a visual indicator that sign out was triggered
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('🚪 Signing out...'),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+
     try {
       final authService = context.read<AuthService>();
+      print('✅ Got AuthService');
 
       // Disconnect SSE before signing out
+      print('📡 Cancelling SSE subscription...');
       _sseSubscription?.cancel();
+      print('📡 Disposing SSE service...');
       _sseService.dispose();
+      print('✅ SSE cleaned up');
 
+      print('🔓 Calling authService.signOut()...');
       await authService.signOut();
+      print('✅ authService.signOut() completed');
 
-      // The AuthWrapper's StreamBuilder will automatically navigate to AuthScreen
-      // when the auth state changes to null
+      // Force navigation to auth screen
+      print('🚀 Forcing navigation to /auth...');
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/auth');
+        print('✅ Navigated to /auth');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Signed out successfully'),
+            duration: Duration(seconds: 1),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
-      print('DEBUG: Sign out error: $e');
+      print('═' * 80);
+      print('❌ SIGN OUT ERROR: $e');
+      print('═' * 80);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -334,22 +369,29 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           PopupMenuButton<String>(
             onSelected: (value) {
+              print('🔘 PopupMenu item selected: $value');
               if (value == 'signout') {
+                print('🔘 Sign out menu item matched, calling _signOut()');
                 _signOut();
+              } else {
+                print('⚠️  Unknown menu value: $value');
               }
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'signout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout),
-                    SizedBox(width: 8),
-                    Text('Sign Out'),
-                  ],
+            itemBuilder: (context) {
+              print('📋 Building popup menu items');
+              return [
+                const PopupMenuItem(
+                  value: 'signout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout),
+                      SizedBox(width: 8),
+                      Text('Sign Out'),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ];
+            },
           ),
         ],
       ),

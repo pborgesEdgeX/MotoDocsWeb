@@ -181,7 +181,8 @@ class _AIChatScreenState extends State<AIChatScreen> {
             isUser: false,
             timestamp: DateTime.now(),
             confidence: result['confidence']?.toDouble(),
-            bikeModel: combinedBikeModel, // Include the combined bike model and year
+            bikeModel:
+                combinedBikeModel, // Include the combined bike model and year
           ),
         );
       });
@@ -207,7 +208,10 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
     // Motorcycle Model (always shown at top)
     if (_selectedBikeModel.isNotEmpty) {
-      buffer.writeln('🏍️ MOTORCYCLE: $_selectedBikeModel');
+      final motorcycleDisplay = _selectedBikeYear.isNotEmpty
+          ? '$_selectedBikeModel $_selectedBikeYear'
+          : _selectedBikeModel;
+      buffer.writeln('🏍️ MOTORCYCLE: $motorcycleDisplay');
       buffer.writeln();
     }
 
@@ -260,9 +264,10 @@ class _AIChatScreenState extends State<AIChatScreen> {
       if (refs.isNotEmpty) {
         buffer.writeln('📚 REFERENCES:');
         for (var ref in refs) {
-          buffer.writeln(
-            '• Doc ID: ${ref['doc_id']} (confidence: ${(ref['confidence'] * 100).toStringAsFixed(1)}%)',
-          );
+          final docName =
+              ref['doc_name'] ?? ref['doc_id'] ?? 'Unknown Document';
+          final confidence = (ref['confidence'] * 100).toStringAsFixed(1);
+          buffer.writeln('• $docName (confidence: ${confidence}%)');
         }
       }
     }

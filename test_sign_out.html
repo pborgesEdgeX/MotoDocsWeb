@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Sign Out Flow</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <h1>Firebase Auth Sign Out Test</h1>
+    <div id="status"></div>
+    <button id="signOutBtn" style="display:none;">Sign Out</button>
+    
+    <script>
+        // Initialize Firebase with your config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBr6OexhKt-S8aAHPzA52vsK_Kxv5lvvBg",
+            authDomain: "motodoc-backend.firebaseapp.com",
+            projectId: "motodoc-backend",
+            storageBucket: "motodoc-backend.firebasestorage.app",
+            messagingSenderId: "86917810457",
+            appId: "1:86917810457:web:8da8f57f5c8b04df46b29d"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const statusDiv = document.getElementById('status');
+        const signOutBtn = document.getElementById('signOutBtn');
+        
+        // Monitor auth state
+        auth.onAuthStateChanged((user) => {
+            console.log('Auth state changed:', user);
+            if (user) {
+                statusDiv.innerHTML = `
+                    <p>✅ Signed in as: ${user.email}</p>
+                    <p>User ID: ${user.uid}</p>
+                `;
+                signOutBtn.style.display = 'block';
+            } else {
+                statusDiv.innerHTML = '<p>❌ Not signed in</p>';
+                signOutBtn.style.display = 'none';
+            }
+        });
+        
+        // Sign out button
+        signOutBtn.onclick = async () => {
+            console.log('Sign out button clicked');
+            try {
+                await auth.signOut();
+                console.log('✅ Sign out successful');
+                statusDiv.innerHTML += '<p>✅ Sign out successful!</p>';
+            } catch (error) {
+                console.error('❌ Sign out error:', error);
+                statusDiv.innerHTML += `<p>❌ Sign out error: ${error.message}</p>`;
+            }
+        };
+    </script>
+</body>
+</html>

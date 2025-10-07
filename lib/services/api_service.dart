@@ -70,6 +70,35 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getSeparatedBikeModels() async {
+    try {
+      final response = await _dio.get(
+        '/api/v1/documents/bike-models/separated',
+      );
+      final Map<String, dynamic> data = response.data ?? {};
+
+      final List<dynamic> modelsJson = data['models'] ?? [];
+      final List<dynamic> yearsJson = data['years'] ?? [];
+      final Map<String, dynamic> modelYearsJson = data['model_years'] ?? {};
+
+      // Convert model_years to proper format
+      Map<String, List<String>> modelYears = {};
+      modelYearsJson.forEach((model, years) {
+        if (years is List) {
+          modelYears[model] = years.map((year) => year.toString()).toList();
+        }
+      });
+
+      return {
+        'models': modelsJson.map((model) => model.toString()).toList(),
+        'years': yearsJson.map((year) => year.toString()).toList(),
+        'model_years': modelYears,
+      };
+    } catch (e) {
+      throw Exception('Failed to fetch separated bike models: $e');
+    }
+  }
+
   Future<Document> createDocument({
     required String name,
     required String mimeType,

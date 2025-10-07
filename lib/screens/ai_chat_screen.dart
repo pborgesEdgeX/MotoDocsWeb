@@ -19,9 +19,12 @@ class _AIChatScreenState extends State<AIChatScreen> {
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
   String _selectedBikeModel = ''; // Now required, starts empty
+  String _selectedBikeYear = ''; // Now required, starts empty
   String _currentLoadingPhrase = '';
   Timer? _phraseTimer;
   List<String> _availableBikeModels = [];
+  List<String> _availableBikeYears = [];
+  Map<String, List<String>> _modelYearsMap = {};
   bool _loadingBikeModels = true;
 
   final List<String> _loadingPhrases = [
@@ -53,15 +56,31 @@ class _AIChatScreenState extends State<AIChatScreen> {
       final token = await authService.getIdToken();
       if (token != null) {
         apiService.setAuthToken(token);
-        final models = await apiService.getBikeModels();
+        final separatedData = await apiService.getSeparatedBikeModels();
         setState(() {
-          _availableBikeModels = models;
+          _availableBikeModels = List<String>.from(
+            separatedData['models'] ?? [],
+          );
+          _availableBikeYears = List<String>.from(separatedData['years'] ?? []);
+          _modelYearsMap = Map<String, List<String>>.from(
+            separatedData['model_years'] ?? {},
+          );
           _loadingBikeModels = false;
-          // Set first model as default if available
-          if (models.isNotEmpty) {
-            _selectedBikeModel = models.first;
+
+          // Set first model and its first available year as default if available
+          if (_availableBikeModels.isNotEmpty) {
+            _selectedBikeModel = _availableBikeModels.first;
+            // Get years for the selected model
+            final modelYears = _modelYearsMap[_selectedBikeModel] ?? [];
+            if (modelYears.isNotEmpty) {
+              _selectedBikeYear = modelYears.first;
+            }
           }
         });
+
+        print(
+          'Loaded ${_availableBikeModels.length} bike models, ${_availableBikeYears.length} total years, and ${_modelYearsMap.length} model-year relationships',
+        );
       }
     } catch (e) {
       setState(() => _loadingBikeModels = false);
@@ -98,7 +117,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     _messages.add(
       ChatMessage(
         text:
-            "Hello! I'm your MotoDocs AI assistant. 🏍️\n\nFirst, select your motorcycle model from the dropdown above. Then ask me anything about maintenance, repairs, or troubleshooting - I'll search through the relevant service manuals to help you!",
+            "Hello! I'm your MotoDocs AI assistant. 🏍️\n\nFirst, select your motorcycle model and year from the dropdowns above. Then ask me anything about maintenance, repairs, or troubleshooting - I'll search through the relevant service manuals to help you!",
         isUser: false,
         timestamp: DateTime.now(),
       ),
@@ -109,11 +128,11 @@ class _AIChatScreenState extends State<AIChatScreen> {
     final text = _messageController.text.trim();
     if (text.isEmpty || _isLoading) return;
 
-    // Validate bike model is selected
-    if (_selectedBikeModel.isEmpty) {
+    // Validate bike model and year are selected
+    if (_selectedBikeModel.isEmpty || _selectedBikeYear.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select a motorcycle model first'),
+          content: Text('Please select both motorcycle model and year first'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -144,10 +163,11 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
       apiService.setAuthToken(token);
 
-      // Send query to AI (bike model is now required)
+      // Send query to AI (bike model and year are now required)
+      final combinedBikeModel = '$_selectedBikeModel $_selectedBikeYear';
       final result = await apiService.getSuggestion(
         query: text,
-        bikeModel: _selectedBikeModel, // Always has a value now
+        bikeModel: combinedBikeModel,
       );
 
       // Format structured RAG response
@@ -161,7 +181,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
             isUser: false,
             timestamp: DateTime.now(),
             confidence: result['confidence']?.toDouble(),
-            bikeModel: _selectedBikeModel, // Include the bike model
+            bikeModel: combinedBikeModel, // Include the combined bike model and year
           ),
         );
       });
@@ -253,6 +273,25 @@ class _AIChatScreenState extends State<AIChatScreen> {
         : 'Sorry, I couldn\'t process your request.';
   }
 
+  List<String> _getAvailableYearsForModel(String model) {
+    return _modelYearsMap[model] ?? [];
+  }
+
+  void _onModelChanged(String? newModel) {
+    if (newModel != null) {
+      setState(() {
+        _selectedBikeModel = newModel;
+        // Reset year selection and get available years for the new model
+        final availableYears = _getAvailableYearsForModel(newModel);
+        if (availableYears.isNotEmpty) {
+          _selectedBikeYear = availableYears.first;
+        } else {
+          _selectedBikeYear = '';
+        }
+      });
+    }
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -269,79 +308,168 @@ class _AIChatScreenState extends State<AIChatScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Bike Model Filter (Required Dropdown)
+        // Bike Model and Year Filters (Required Dropdowns)
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.grey[100],
             border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
           ),
-          child: Row(
+          child: Column(
             children: [
-              const Icon(Icons.motorcycle, color: Colors.blue),
-              const SizedBox(width: 8),
-              const Text(
-                'Motorcycle Model:',
-                style: TextStyle(fontWeight: FontWeight.w600),
+              Row(
+                children: [
+                  const Icon(Icons.motorcycle, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Motorcycle Selection:',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    '(Required)',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              const Text(
-                '(Required)',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _loadingBikeModels
-                    ? const Row(
-                        children: [
-                          SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          SizedBox(width: 8),
-                          Text('Loading models...'),
-                        ],
-                      )
-                    : _availableBikeModels.isEmpty
-                    ? const Text(
-                        'No bike models available',
-                        style: TextStyle(color: Colors.red),
-                      )
-                    : DropdownButtonFormField<String>(
-                        value: _selectedBikeModel.isEmpty
-                            ? null
-                            : _selectedBikeModel,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  // Model Dropdown
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Model:',
+                          style: TextStyle(fontWeight: FontWeight.w500),
                         ),
-                        hint: const Text('Select a motorcycle model'),
-                        isExpanded: true,
-                        items: _availableBikeModels
-                            .map(
-                              (model) => DropdownMenuItem(
-                                value: model,
-                                child: Text(
-                                  model,
-                                  overflow: TextOverflow.ellipsis,
+                        const SizedBox(height: 4),
+                        _loadingBikeModels
+                            ? const Row(
+                                children: [
+                                  SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('Loading...'),
+                                ],
+                              )
+                            : _availableBikeModels.isEmpty
+                            ? const Text(
+                                'No models available',
+                                style: TextStyle(color: Colors.red),
+                              )
+                            : DropdownButtonFormField<String>(
+                                value: _selectedBikeModel.isEmpty
+                                    ? null
+                                    : _selectedBikeModel,
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
                                 ),
+                                hint: const Text('Select model'),
+                                isExpanded: true,
+                                items: _availableBikeModels
+                                    .map(
+                                      (model) => DropdownMenuItem(
+                                        value: model,
+                                        child: Text(
+                                          model,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: _onModelChanged,
                               ),
-                            )
-                            .toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedBikeModel = value ?? '';
-                          });
-                        },
-                      ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Year Dropdown
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Year:',
+                          style: TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        const SizedBox(height: 4),
+                        _loadingBikeModels
+                            ? const Row(
+                                children: [
+                                  SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('Loading...'),
+                                ],
+                              )
+                            : _getAvailableYearsForModel(
+                                _selectedBikeModel,
+                              ).isEmpty
+                            ? Text(
+                                _selectedBikeModel.isEmpty
+                                    ? 'Select a model first'
+                                    : 'No years available for $_selectedBikeModel',
+                                style: const TextStyle(color: Colors.orange),
+                              )
+                            : DropdownButtonFormField<String>(
+                                value: _selectedBikeYear.isEmpty
+                                    ? null
+                                    : _selectedBikeYear,
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                ),
+                                hint: const Text('Select year'),
+                                isExpanded: true,
+                                items:
+                                    _getAvailableYearsForModel(
+                                          _selectedBikeModel,
+                                        )
+                                        .map(
+                                          (year) => DropdownMenuItem(
+                                            value: year,
+                                            child: Text(
+                                              year,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedBikeYear = value ?? '';
+                                  });
+                                },
+                              ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

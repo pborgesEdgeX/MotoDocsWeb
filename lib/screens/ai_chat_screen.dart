@@ -161,6 +161,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
             isUser: false,
             timestamp: DateTime.now(),
             confidence: result['confidence']?.toDouble(),
+            bikeModel: _selectedBikeModel, // Include the bike model
           ),
         );
       });
@@ -183,6 +184,12 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
   String _formatRagResponse(Map<String, dynamic> result) {
     StringBuffer buffer = StringBuffer();
+
+    // Motorcycle Model (always shown at top)
+    if (_selectedBikeModel.isNotEmpty) {
+      buffer.writeln('🏍️ MOTORCYCLE: $_selectedBikeModel');
+      buffer.writeln();
+    }
 
     // Diagnosis
     if (result.containsKey('diagnosis')) {
@@ -234,7 +241,8 @@ class _AIChatScreenState extends State<AIChatScreen> {
         buffer.writeln('📚 REFERENCES:');
         for (var ref in refs) {
           buffer.writeln(
-              '• Doc ID: ${ref['doc_id']} (confidence: ${(ref['confidence'] * 100).toStringAsFixed(1)}%)');
+            '• Doc ID: ${ref['doc_id']} (confidence: ${(ref['confidence'] * 100).toStringAsFixed(1)}%)',
+          );
         }
       }
     }
@@ -300,38 +308,40 @@ class _AIChatScreenState extends State<AIChatScreen> {
                         ],
                       )
                     : _availableBikeModels.isEmpty
-                        ? const Text(
-                            'No bike models available',
-                            style: TextStyle(color: Colors.red),
-                          )
-                        : DropdownButtonFormField<String>(
-                            value: _selectedBikeModel.isEmpty
-                                ? null
-                                : _selectedBikeModel,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            hint: const Text('Select a motorcycle model'),
-                            isExpanded: true,
-                            items: _availableBikeModels
-                                .map((model) => DropdownMenuItem(
-                                      value: model,
-                                      child: Text(
-                                        model,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ))
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedBikeModel = value ?? '';
-                              });
-                            },
+                    ? const Text(
+                        'No bike models available',
+                        style: TextStyle(color: Colors.red),
+                      )
+                    : DropdownButtonFormField<String>(
+                        value: _selectedBikeModel.isEmpty
+                            ? null
+                            : _selectedBikeModel,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
                           ),
+                        ),
+                        hint: const Text('Select a motorcycle model'),
+                        isExpanded: true,
+                        items: _availableBikeModels
+                            .map(
+                              (model) => DropdownMenuItem(
+                                value: model,
+                                child: Text(
+                                  model,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedBikeModel = value ?? '';
+                          });
+                        },
+                      ),
               ),
             ],
           ),
@@ -378,7 +388,8 @@ class _AIChatScreenState extends State<AIChatScreen> {
                   child: TextField(
                     controller: _messageController,
                     decoration: const InputDecoration(
-                      hintText: 'Ask about your motorcycle... (Press Enter to send, Shift+Enter for new line)',
+                      hintText:
+                          'Ask about your motorcycle... (Press Enter to send, Shift+Enter for new line)',
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 16,
@@ -587,11 +598,13 @@ class ChatMessage {
   final bool isUser;
   final DateTime timestamp;
   final double? confidence;
+  final String? bikeModel;
 
   ChatMessage({
     required this.text,
     required this.isUser,
     required this.timestamp,
     this.confidence,
+    this.bikeModel,
   });
 }

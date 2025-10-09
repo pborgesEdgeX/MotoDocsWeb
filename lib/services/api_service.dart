@@ -4,6 +4,9 @@ import 'dart:html' as html;
 import 'package:dio/dio.dart';
 import '../models/document.dart';
 import '../models/suggestion.dart';
+import '../models/mechanic.dart';
+import '../models/availability_slot.dart';
+import '../models/appointment.dart';
 
 class ApiService {
   static const String baseUrl = 'http://localhost:8000';
@@ -271,6 +274,220 @@ class ApiService {
       return response.data;
     } catch (e) {
       throw Exception('Failed to ingest document: $e');
+    }
+  }
+
+  // ============================================================================
+  // Mechanic Scheduler API Methods
+  // ============================================================================
+
+  // Mechanic Authentication
+  Future<Map<String, dynamic>> registerMechanic(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/api/v1/mechanics/register', data: data);
+      return response.data;
+    } catch (e) {
+      throw Exception('Failed to register mechanic: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> loginMechanic(String email, String password) async {
+    try {
+      final response = await _dio.post(
+        '/api/v1/mechanics/login',
+        data: {'email': email, 'password': password},
+      );
+      return response.data;
+    } catch (e) {
+      throw Exception('Failed to login mechanic: $e');
+    }
+  }
+
+  Future<Mechanic> getMechanicProfile() async {
+    try {
+      final response = await _dio.get('/api/v1/mechanics/me');
+      return Mechanic.fromJson(response.data);
+    } catch (e) {
+      throw Exception('Failed to get mechanic profile: $e');
+    }
+  }
+
+  Future<Mechanic> updateMechanicProfile(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.put('/api/v1/mechanics/me', data: data);
+      return Mechanic.fromJson(response.data);
+    } catch (e) {
+      throw Exception('Failed to update mechanic profile: $e');
+    }
+  }
+
+  Future<Mechanic> toggleMechanicAvailability(bool isAvailable) async {
+    try {
+      final response = await _dio.patch(
+        '/api/v1/mechanics/me/availability',
+        data: {'is_available': isAvailable},
+      );
+      return Mechanic.fromJson(response.data);
+    } catch (e) {
+      throw Exception('Failed to toggle availability: $e');
+    }
+  }
+
+  // Availability Management
+  Future<List<AvailabilitySlot>> getAvailabilitySlots({bool activeOnly = true}) async {
+    try {
+      final response = await _dio.get(
+        '/api/v1/mechanics/availability',
+        queryParameters: {'active_only': activeOnly},
+      );
+      final data = response.data as Map<String, dynamic>;
+      final slots = data['slots'] as List<dynamic>;
+      return slots.map((slot) => AvailabilitySlot.fromJson(slot)).toList();
+    } catch (e) {
+      throw Exception('Failed to get availability slots: $e');
+    }
+  }
+
+  Future<AvailabilitySlot> createAvailabilitySlot(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post(
+        '/api/v1/mechanics/availability',
+        data: data,
+      );
+      return AvailabilitySlot.fromJson(response.data);
+    } catch (e) {
+      throw Exception('Failed to create availability slot: $e');
+    }
+  }
+
+  Future<AvailabilitySlot> updateAvailabilitySlot(
+    String slotId,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await _dio.put(
+        '/api/v1/mechanics/availability/$slotId',
+        data: data,
+      );
+      return AvailabilitySlot.fromJson(response.data);
+    } catch (e) {
+      throw Exception('Failed to update availability slot: $e');
+    }
+  }
+
+  Future<void> deleteAvailabilitySlot(String slotId) async {
+    try {
+      await _dio.delete('/api/v1/mechanics/availability/$slotId');
+    } catch (e) {
+      throw Exception('Failed to delete availability slot: $e');
+    }
+  }
+
+  // Appointments
+  Future<List<MechanicPublicInfo>> getAvailableMechanics({
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/v1/appointments/available-mechanics',
+        queryParameters: {'page': page, 'per_page': perPage},
+      );
+      final data = response.data as Map<String, dynamic>;
+      final mechanics = data['mechanics'] as List<dynamic>;
+      return mechanics.map((m) => MechanicPublicInfo.fromJson(m)).toList();
+    } catch (e) {
+      throw Exception('Failed to get available mechanics: $e');
+    }
+  }
+
+  Future<Appointment> scheduleAppointment(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post(
+        '/api/v1/appointments/schedule',
+        data: data,
+      );
+      return Appointment.fromJson(response.data);
+    } catch (e) {
+      throw Exception('Failed to schedule appointment: $e');
+    }
+  }
+
+  Future<List<Appointment>> getMyAppointments({
+    String? statusFilter,
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/v1/appointments/my-appointments',
+        queryParameters: {
+          if (statusFilter != null) 'status_filter': statusFilter,
+          'page': page,
+          'per_page': perPage,
+        },
+      );
+      final data = response.data as Map<String, dynamic>;
+      final appointments = data['appointments'] as List<dynamic>;
+      return appointments.map((a) => Appointment.fromJson(a)).toList();
+    } catch (e) {
+      throw Exception('Failed to get my appointments: $e');
+    }
+  }
+
+  Future<List<Appointment>> getMechanicAppointments({
+    String? statusFilter,
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/v1/appointments/mechanic-appointments',
+        queryParameters: {
+          if (statusFilter != null) 'status_filter': statusFilter,
+          'page': page,
+          'per_page': perPage,
+        },
+      );
+      final data = response.data as Map<String, dynamic>;
+      final appointments = data['appointments'] as List<dynamic>;
+      return appointments.map((a) => Appointment.fromJson(a)).toList();
+    } catch (e) {
+      throw Exception('Failed to get mechanic appointments: $e');
+    }
+  }
+
+  Future<Appointment> updateAppointmentStatus(
+    String appointmentId,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await _dio.patch(
+        '/api/v1/appointments/$appointmentId/status',
+        data: data,
+      );
+      return Appointment.fromJson(response.data);
+    } catch (e) {
+      throw Exception('Failed to update appointment status: $e');
+    }
+  }
+
+  // Agora Token Generation
+  Future<Map<String, dynamic>> generateAgoraToken(
+    String appointmentId,
+    String userType,
+  ) async {
+    try {
+      final response = await _dio.post(
+        '/api/v1/appointments/agora/token',
+        data: {
+          'appointment_id': appointmentId,
+          'user_type': userType,
+        },
+      );
+      return response.data;
+    } catch (e) {
+      throw Exception('Failed to generate Agora token: $e');
     }
   }
 }

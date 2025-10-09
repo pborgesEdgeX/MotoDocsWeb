@@ -4,10 +4,18 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'services/auth_service.dart';
 import 'services/api_service.dart';
+import 'services/mechanic_auth_service.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/main_layout_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_success_screen.dart';
+import 'screens/mechanic/auth/mechanic_login_screen.dart';
+import 'screens/mechanic/auth/mechanic_register_screen.dart';
+import 'screens/mechanic/mechanic_dashboard_screen.dart';
+import 'screens/mechanic/availability_management_screen.dart';
+import 'screens/mechanic/video_call_screen.dart';
+import 'models/appointment.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,10 +33,12 @@ class MotoDocsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final apiService = ApiService();
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
-        Provider(create: (_) => ApiService()),
+        Provider.value(value: apiService),
+        ChangeNotifierProvider(create: (_) => MechanicAuthService(apiService)),
       ],
       child: MaterialApp(
         title: 'MotoDocs AI',
@@ -43,7 +53,22 @@ class MotoDocsApp extends StatelessWidget {
         home: const AuthWrapper(),
         routes: {
           '/auth': (context) => const AuthScreen(),
-          '/home': (context) => const HomeScreen(),
+          '/home': (context) => const MainLayoutScreen(),
+          '/login': (context) => const AuthScreen(),
+          '/mechanic-login': (context) => const MechanicLoginScreen(),
+          '/mechanic-register': (context) => const MechanicRegisterScreen(),
+          '/mechanic-dashboard': (context) => const MechanicDashboardScreen(),
+          '/mechanic-availability': (context) => const AvailabilityManagementScreen(),
+          '/ai-docs': (context) => const MainLayoutScreen(),
+        },
+        onGenerateRoute: (settings) {
+          if (settings.name == '/mechanic-video-call') {
+            final appointment = settings.arguments as Appointment;
+            return MaterialPageRoute(
+              builder: (context) => VideoCallScreen(appointment: appointment),
+            );
+          }
+          return null;
         },
         debugShowCheckedModeBanner: false,
       ),
@@ -137,8 +162,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
             _showLoginAnimation = false;
           }
 
-          print('🏠 Returning HomeScreen');
-          return const HomeScreen();
+          print('🏠 Returning MainLayoutScreen');
+          return const MainLayoutScreen();
         } else {
           // No authenticated user - redirect to auth screen
           print('🚪 No authenticated user detected');

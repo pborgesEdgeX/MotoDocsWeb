@@ -41,6 +41,9 @@ dependencies:
   dio: ^5.9.0
   file_picker: ^10.3.3
   lottie: ^3.2.1
+  agora_rtc_engine: ^6.3.2
+  table_calendar: ^3.1.2
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:

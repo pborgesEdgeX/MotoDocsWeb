@@ -58,7 +58,8 @@ class MotoDocsApp extends StatelessWidget {
           '/mechanic-login': (context) => const MechanicLoginScreen(),
           '/mechanic-register': (context) => const MechanicRegisterScreen(),
           '/mechanic-dashboard': (context) => const MechanicDashboardScreen(),
-          '/mechanic-availability': (context) => const AvailabilityManagementScreen(),
+          '/mechanic-availability': (context) =>
+              const AvailabilityManagementScreen(),
           '/ai-docs': (context) => const MainLayoutScreen(),
         },
         onGenerateRoute: (settings) {

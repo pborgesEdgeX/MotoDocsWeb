@@ -67,7 +67,9 @@ class _AvailabilityManagementScreenState
   }
 
   List<AvailabilitySlot> _getSlotsForDay(String day) {
-    return _slots.where((slot) => slot.dayOfWeek == day && slot.isRecurring).toList();
+    return _slots
+        .where((slot) => slot.dayOfWeek == day && slot.isRecurring)
+        .toList();
   }
 
   @override
@@ -182,10 +184,7 @@ class _AvailabilityManagementScreenState
                 children: [
                   const Text(
                     '📅 Weekly Schedule',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   ElevatedButton.icon(
                     onPressed: () => _showAddSlotDialog(),
@@ -251,8 +250,10 @@ class _AvailabilityManagementScreenState
                                             TextButton.icon(
                                               onPressed: () =>
                                                   _showAddSlotDialog(day: day),
-                                              icon: const Icon(Icons.add,
-                                                  size: 16),
+                                              icon: const Icon(
+                                                Icons.add,
+                                                size: 16,
+                                              ),
                                               label: const Text('Add Hours'),
                                               style: TextButton.styleFrom(
                                                 foregroundColor:
@@ -273,10 +274,7 @@ class _AvailabilityManagementScreenState
                             ),
                           ),
                           if (!isLastDay)
-                            Divider(
-                              height: 1,
-                              color: Colors.grey.shade200,
-                            ),
+                            Divider(height: 1, color: Colors.grey.shade200),
                         ],
                       );
                     }),
@@ -311,8 +309,9 @@ class _AvailabilityManagementScreenState
           Text(
             '${slot.startTime} - ${slot.endTime}',
             style: TextStyle(
-              color:
-                  slot.isActive ? Colors.green.shade700 : Colors.grey.shade700,
+              color: slot.isActive
+                  ? Colors.green.shade700
+                  : Colors.grey.shade700,
               fontWeight: FontWeight.w500,
               fontSize: 13,
             ),
@@ -320,20 +319,12 @@ class _AvailabilityManagementScreenState
           const SizedBox(width: 8),
           InkWell(
             onTap: () => _showEditSlotDialog(slot),
-            child: Icon(
-              Icons.edit,
-              size: 16,
-              color: Colors.blue.shade600,
-            ),
+            child: Icon(Icons.edit, size: 16, color: Colors.blue.shade600),
           ),
           const SizedBox(width: 6),
           InkWell(
             onTap: () => _deleteSlot(slot),
-            child: Icon(
-              Icons.delete,
-              size: 16,
-              color: Colors.red.shade600,
-            ),
+            child: Icon(Icons.delete, size: 16, color: Colors.red.shade600),
           ),
         ],
       ),
@@ -449,9 +440,11 @@ class _AvailabilityManagementScreenState
       final apiService = context.read<ApiService>();
       await apiService.createAvailabilitySlot({
         'day_of_week': day,
-        'start_time': '${startTime.hour.toString().padLeft(2, '0')}:'
+        'start_time':
+            '${startTime.hour.toString().padLeft(2, '0')}:'
             '${startTime.minute.toString().padLeft(2, '0')}',
-        'end_time': '${endTime.hour.toString().padLeft(2, '0')}:'
+        'end_time':
+            '${endTime.hour.toString().padLeft(2, '0')}:'
             '${endTime.minute.toString().padLeft(2, '0')}',
         'timezone': 'America/New_York',
         'is_recurring': true,
@@ -570,9 +563,11 @@ class _AvailabilityManagementScreenState
     try {
       final apiService = context.read<ApiService>();
       await apiService.updateAvailabilitySlot(slot.id, {
-        'start_time': '${startTime.hour.toString().padLeft(2, '0')}:'
+        'start_time':
+            '${startTime.hour.toString().padLeft(2, '0')}:'
             '${startTime.minute.toString().padLeft(2, '0')}',
-        'end_time': '${endTime.hour.toString().padLeft(2, '0')}:'
+        'end_time':
+            '${endTime.hour.toString().padLeft(2, '0')}:'
             '${endTime.minute.toString().padLeft(2, '0')}',
       });
 

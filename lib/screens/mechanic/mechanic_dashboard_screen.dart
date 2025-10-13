@@ -122,10 +122,7 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
               const SizedBox(height: 8),
               Text(
                 'Manage your schedule and upcoming video consultations',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 32),
 
@@ -241,10 +238,7 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
                 children: [
                   const Text(
                     '📋 Upcoming Appointments',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   TextButton.icon(
                     onPressed: _loadUpcomingAppointments,
@@ -349,9 +343,7 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
   ) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -429,10 +421,9 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
     if (confirmed == true) {
       try {
         final apiService = context.read<ApiService>();
-        await apiService.updateAppointmentStatus(
-          appointment.id,
-          {'status': 'cancelled'},
-        );
+        await apiService.updateAppointmentStatus(appointment.id, {
+          'status': 'cancelled',
+        });
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

@@ -6,10 +6,7 @@ import '../../services/api_service.dart';
 class VideoCallScreen extends StatefulWidget {
   final Appointment appointment;
 
-  const VideoCallScreen({
-    super.key,
-    required this.appointment,
-  });
+  const VideoCallScreen({super.key, required this.appointment});
 
   @override
   State<VideoCallScreen> createState() => _VideoCallScreenState();
@@ -89,11 +86,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                color: Colors.red,
-                size: 64,
-              ),
+              const Icon(Icons.error_outline, color: Colors.red, size: 64),
               const SizedBox(height: 24),
               Text(
                 'Failed to connect',
@@ -242,10 +235,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                       ),
                       child: const Text(
                         'You',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ),
                   ),
@@ -265,19 +255,12 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.6),
-                    Colors.transparent,
-                  ],
+                  colors: [Colors.black.withOpacity(0.6), Colors.transparent],
                 ),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.fiber_manual_record,
-                    color: Colors.red,
-                    size: 16,
-                  ),
+                  Icon(Icons.fiber_manual_record, color: Colors.red, size: 16),
                   const SizedBox(width: 8),
                   const Text(
                     'In Call',
@@ -316,10 +299,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.8),
-                    Colors.transparent,
-                  ],
+                  colors: [Colors.black.withOpacity(0.8), Colors.transparent],
                 ),
               ),
               child: Row(
@@ -385,14 +365,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             child: Container(
               width: size,
               height: size,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: color,
-                size: size * 0.5,
-              ),
+              decoration: const BoxDecoration(shape: BoxShape.circle),
+              child: Icon(icon, color: color, size: size * 0.5),
             ),
           ),
         ),
@@ -436,10 +410,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       // TODO: Update appointment status to completed
       try {
         final apiService = context.read<ApiService>();
-        await apiService.updateAppointmentStatus(
-          widget.appointment.id,
-          {'status': 'completed'},
-        );
+        await apiService.updateAppointmentStatus(widget.appointment.id, {
+          'status': 'completed',
+        });
       } catch (e) {
         // Handle error silently
       }

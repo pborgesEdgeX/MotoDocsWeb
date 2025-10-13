@@ -105,10 +105,7 @@ class _MechanicRegisterScreenState extends State<MechanicRegisterScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.orange.shade700,
-              Colors.deepOrange.shade600,
-            ],
+            colors: [Colors.orange.shade700, Colors.deepOrange.shade600],
           ),
         ),
         child: Center(
@@ -302,9 +299,10 @@ class _MechanicRegisterScreenState extends State<MechanicRegisterScreen> {
                           Expanded(
                             child: TextFormField(
                               controller: _hourlyRateController,
-                              keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               decoration: InputDecoration(
                                 labelText: 'Hourly Rate (\$) *',
                                 prefixIcon: const Icon(Icons.attach_money),
@@ -340,7 +338,9 @@ class _MechanicRegisterScreenState extends State<MechanicRegisterScreen> {
                         spacing: 8,
                         runSpacing: 8,
                         children: _availableSpecializations.map((spec) {
-                          final isSelected = _selectedSpecializations.contains(spec);
+                          final isSelected = _selectedSpecializations.contains(
+                            spec,
+                          );
                           return FilterChip(
                             label: Text(spec),
                             selected: isSelected,
@@ -383,7 +383,9 @@ class _MechanicRegisterScreenState extends State<MechanicRegisterScreen> {
 
                       // Register Button
                       ElevatedButton(
-                        onPressed: mechanicAuth.isLoading ? null : _handleRegister,
+                        onPressed: mechanicAuth.isLoading
+                            ? null
+                            : _handleRegister,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange.shade700,
                           foregroundColor: Colors.white,

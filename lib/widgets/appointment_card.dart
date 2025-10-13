@@ -75,10 +75,7 @@ class AppointmentCard extends StatelessWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: _getStatusColor().withOpacity(0.3),
-          width: 2,
-        ),
+        side: BorderSide(color: _getStatusColor().withOpacity(0.3), width: 2),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -184,11 +181,7 @@ class AppointmentCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.motorcycle,
-                    color: Colors.grey.shade700,
-                    size: 20,
-                  ),
+                  Icon(Icons.motorcycle, color: Colors.grey.shade700, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -216,10 +209,7 @@ class AppointmentCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               appointment.issueDescription,
-              style: TextStyle(
-                color: Colors.grey.shade700,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -228,11 +218,7 @@ class AppointmentCard extends StatelessWidget {
             // Scheduled Time
             Row(
               children: [
-                Icon(
-                  Icons.access_time,
-                  size: 18,
-                  color: Colors.grey.shade600,
-                ),
+                Icon(Icons.access_time, size: 18, color: Colors.grey.shade600),
                 const SizedBox(width: 8),
                 Text(
                   dateFormat.format(appointment.scheduledTime),
@@ -244,10 +230,7 @@ class AppointmentCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Text(
                   '(${appointment.durationMinutes} min)',
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
                 ),
               ],
             ),

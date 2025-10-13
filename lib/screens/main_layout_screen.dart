@@ -51,9 +51,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           ),
 
           // Main Content Area
-          Expanded(
-            child: _getCurrentScreen(),
-          ),
+          Expanded(child: _getCurrentScreen()),
         ],
       ),
     );

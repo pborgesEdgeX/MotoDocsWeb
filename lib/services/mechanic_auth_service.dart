@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:html' as html;
 import 'package:flutter/foundation.dart';
 import '../models/mechanic.dart';
@@ -13,7 +14,8 @@ class MechanicAuthService extends ChangeNotifier {
   String? get mechanicToken => _mechanicToken;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  bool get isAuthenticated => _currentMechanic != null && _mechanicToken != null;
+  bool get isAuthenticated =>
+      _currentMechanic != null && _mechanicToken != null;
 
   final ApiService _apiService;
 
@@ -29,9 +31,7 @@ class MechanicAuthService extends ChangeNotifier {
       if (token != null && mechanicData != null) {
         _mechanicToken = token;
         _currentMechanic = Mechanic.fromJson(
-          Map<String, dynamic>.from(
-            _parseJson(mechanicData),
-          ),
+          Map<String, dynamic>.from(_parseJson(mechanicData)),
         );
         _apiService.setAuthToken(token);
         notifyListeners();
@@ -43,7 +43,7 @@ class MechanicAuthService extends ChangeNotifier {
 
   dynamic _parseJson(String jsonString) {
     try {
-      return html.window.JSON.parse(jsonString);
+      return jsonDecode(jsonString);
     } catch (e) {
       return {};
     }
@@ -64,8 +64,9 @@ class MechanicAuthService extends ChangeNotifier {
 
       // Store in local storage
       html.window.localStorage['mechanic_token'] = _mechanicToken!;
-      html.window.localStorage['mechanic_data'] =
-          html.window.JSON.stringify(_currentMechanic!.toJson());
+      html.window.localStorage['mechanic_data'] = jsonEncode(
+        _currentMechanic!.toJson(),
+      );
 
       // Set auth token for API calls
       _apiService.setAuthToken(_mechanicToken!);
@@ -80,29 +81,26 @@ class MechanicAuthService extends ChangeNotifier {
     }
   }
 
-  Future<void> register(Map<String, dynamic> data) async {
+  Future<void> register(Map<String, dynamic> responseData) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final response = await _apiService.registerMechanic(data);
+      // Convert the registration response to a Mechanic object
+      _currentMechanic = Mechanic.fromJson(responseData);
 
-      // After registration, automatically log them in
-      _mechanicToken = 'temp_token'; // In production, get from response
-      _currentMechanic = Mechanic.fromJson(response);
+      // Store in local storage (NO token needed - using Firebase auth)
+      html.window.localStorage['mechanic_data'] = jsonEncode(
+        _currentMechanic!.toJson(),
+      );
 
-      // Store in local storage
-      html.window.localStorage['mechanic_token'] = _mechanicToken!;
-      html.window.localStorage['mechanic_data'] =
-          html.window.JSON.stringify(_currentMechanic!.toJson());
-
-      // Set auth token for API calls
-      _apiService.setAuthToken(_mechanicToken!);
+      print('✅ Mechanic registered and saved: ${_currentMechanic!.name}');
 
       _isLoading = false;
       notifyListeners();
     } catch (e) {
+      print('❌ Error during registration: $e');
       _isLoading = false;
       _errorMessage = e.toString();
       notifyListeners();
@@ -111,21 +109,32 @@ class MechanicAuthService extends ChangeNotifier {
   }
 
   Future<void> refreshProfile() async {
-    if (_mechanicToken == null) return;
+    _isLoading = true;
+    notifyListeners();
 
     try {
-      _apiService.setAuthToken(_mechanicToken!);
       final mechanic = await _apiService.getMechanicProfile();
 
       _currentMechanic = mechanic;
 
       // Update stored data
-      html.window.localStorage['mechanic_data'] =
-          html.window.JSON.stringify(mechanic.toJson());
+      html.window.localStorage['mechanic_data'] = jsonEncode(mechanic.toJson());
 
+      print('✅ Mechanic profile refreshed: ${_currentMechanic!.name}');
+
+      _isLoading = false;
       notifyListeners();
     } catch (e) {
-      print('Error refreshing mechanic profile: $e');
+      print('❌ Error refreshing profile: $e');
+      // If 404, user is not a mechanic - clear storage
+      if (e.toString().contains('404')) {
+        _currentMechanic = null;
+        html.window.localStorage.remove('mechanic_data');
+        print('ℹ️ User is not a mechanic - cleared storage');
+      }
+      _isLoading = false;
+      _errorMessage = e.toString();
+      notifyListeners();
     }
   }
 
@@ -143,8 +152,9 @@ class MechanicAuthService extends ChangeNotifier {
       _currentMechanic = updatedMechanic;
 
       // Update stored data
-      html.window.localStorage['mechanic_data'] =
-          html.window.JSON.stringify(updatedMechanic.toJson());
+      html.window.localStorage['mechanic_data'] = jsonEncode(
+        updatedMechanic.toJson(),
+      );
 
       _isLoading = false;
       notifyListeners();
@@ -157,21 +167,29 @@ class MechanicAuthService extends ChangeNotifier {
   }
 
   Future<void> toggleAvailability(bool isAvailable) async {
-    if (_mechanicToken == null) return;
+    // No token check needed - using Firebase auth
+    _isLoading = true;
+    notifyListeners();
 
     try {
-      _apiService.setAuthToken(_mechanicToken!);
-      final updatedMechanic =
-          await _apiService.toggleMechanicAvailability(isAvailable);
+      final updatedMechanic = await _apiService.toggleMechanicAvailability(
+        isAvailable,
+      );
 
       _currentMechanic = updatedMechanic;
 
       // Update stored data
-      html.window.localStorage['mechanic_data'] =
-          html.window.JSON.stringify(updatedMechanic.toJson());
+      html.window.localStorage['mechanic_data'] = jsonEncode(
+        updatedMechanic.toJson(),
+      );
 
+      print('✅ Availability toggled: ${isAvailable ? "ONLINE" : "OFFLINE"}');
+
+      _isLoading = false;
       notifyListeners();
     } catch (e) {
+      print('❌ Error toggling availability: $e');
+      _isLoading = false;
       _errorMessage = e.toString();
       notifyListeners();
       rethrow;
@@ -198,4 +216,3 @@ class MechanicAuthService extends ChangeNotifier {
     notifyListeners();
   }
 }
-

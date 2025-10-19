@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
-import 'dart:html' as html;
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
-import '../models/document.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:html' as html;
 
 class DocumentUploadScreen extends StatefulWidget {
-  const DocumentUploadScreen({super.key});
+  const DocumentUploadScreen({Key? key}) : super(key: key);
 
   @override
   State<DocumentUploadScreen> createState() => _DocumentUploadScreenState();
@@ -20,11 +19,10 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
   final _componentsController = TextEditingController();
   final _tagsController = TextEditingController();
 
-  html.File? _selectedFile;
-  String? _selectedVisibility;
+  String _selectedVisibility = 'public';
+  PlatformFile? _selectedFile;
   bool _isUploading = false;
-
-  final List<String> _visibilityOptions = ['public', 'internal'];
+  String? _uploadStatus;
 
   @override
   void dispose() {
@@ -37,144 +35,124 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
 
   Future<void> _pickFile() async {
     try {
-      // Create file input element for Flutter web
-      html.FileUploadInputElement uploadInput = html.FileUploadInputElement()
-        ..accept = '.pdf'
-        ..multiple = false;
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+        withData: true,
+      );
 
-      uploadInput.click();
+      if (result != null) {
+        setState(() {
+          _selectedFile = result.files.first;
 
-      uploadInput.onChange.listen((e) {
-        final files = uploadInput.files;
-        if (files != null && files.isNotEmpty) {
-          final file = files[0];
-          if (file.name.toLowerCase().endsWith('.pdf')) {
-            setState(() {
-              _selectedFile = file;
-              // Auto-fill document name from PDF filename (without .pdf extension)
-              if (_nameController.text.isEmpty) {
-                final fileNameWithoutExtension = file.name.substring(
-                  0,
-                  file.name.length - 4,
-                );
-                _nameController.text = fileNameWithoutExtension;
-              }
-            });
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Please select a PDF file')),
-            );
+          // Auto-populate document name from filename (without .pdf extension)
+          String fileName = _selectedFile!.name;
+          if (fileName.toLowerCase().endsWith('.pdf')) {
+            fileName = fileName.substring(0, fileName.length - 4);
           }
-        }
-      });
+          _nameController.text = fileName;
+        });
+      }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error picking file: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error picking file: $e')));
+      }
     }
   }
 
   Future<void> _uploadDocument() async {
-    print('DEBUG UPLOAD: _uploadDocument() called');
-
-    if (!_formKey.currentState!.validate()) {
-      print('DEBUG UPLOAD: Form validation failed');
+    if (!_formKey.currentState!.validate() || _selectedFile == null) {
       return;
     }
 
-    if (_selectedFile == null) {
-      print('DEBUG UPLOAD: No file selected');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a file to upload')),
-      );
-      return;
-    }
-
-    print(
-      'DEBUG UPLOAD: Form validated, file selected: ${_selectedFile!.name}',
-    );
-    setState(() => _isUploading = true);
-
-    final apiService = context.read<ApiService>();
-    final authService = context.read<AuthService>();
-
-    // Get auth token
-    print('DEBUG UPLOAD: Getting auth token...');
-    final token = await authService.getIdToken();
-    if (token == null) {
-      print('DEBUG UPLOAD: No auth token available');
-      if (mounted) {
-        setState(() => _isUploading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Not authenticated')));
-      }
-      return;
-    }
-
-    print('DEBUG UPLOAD: Auth token obtained, length: ${token.length}');
-    apiService.setAuthToken(token);
-
-    // Parse bike models, components, and tags
-    final bikeModels = _bikeModelsController.text
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-
-    final components = _componentsController.text
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-
-    final tags = _tagsController.text
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-
-    print(
-      'DEBUG UPLOAD: Parsed - bikeModels: $bikeModels, components: $components, tags: $tags',
-    );
-    print('DEBUG UPLOAD: Starting upload...');
+    setState(() {
+      _isUploading = true;
+      _uploadStatus = null;
+    });
 
     try {
-      // Upload document and get immediate response (document created)
-      // Processing happens in background, SSE will handle progress updates
-      final result = await apiService.uploadDocument(
-        file: _selectedFile!,
-        name: _nameController.text.trim(),
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final apiService = ApiService();
+
+      // Set the auth token for authenticated uploads
+      final token = await authService.auth.currentUser?.getIdToken();
+      if (token != null) {
+        apiService.setAuthToken(token);
+      }
+
+      final bikeModels = _bikeModelsController.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+
+      final components = _componentsController.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+
+      final tags = _tagsController.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+
+      // Convert PlatformFile to html.File for Flutter web
+      final htmlFile = html.File(
+        [_selectedFile!.bytes!],
+        _selectedFile!.name,
+        {'type': 'application/pdf'},
+      );
+
+      final response = await apiService.uploadDocument(
+        file: htmlFile,
+        name: _nameController.text,
         bikeModels: bikeModels,
         components: components,
         tags: tags,
-        visibility: _selectedVisibility ?? 'public',
+        visibility: _selectedVisibility,
       );
 
-      print('DEBUG UPLOAD: Document created successfully: $result');
-      print('DEBUG UPLOAD: Result type: ${result.runtimeType}');
-      print('DEBUG UPLOAD: Result keys: ${result.keys}');
-
-      // Create Document object from upload result
-      final uploadedDocument = Document.fromJson(result);
-      print('DEBUG UPLOAD: Document object created: ${uploadedDocument.id}');
-
-      // Navigate back immediately - SSE will handle progress updates
       if (mounted) {
-        print(
-          'DEBUG UPLOAD: Returning to home screen with document: ${uploadedDocument.id}',
+        setState(() {
+          _uploadStatus =
+              'Document uploaded successfully! Doc ID: ${response['id']}';
+          _isUploading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Document uploaded successfully!'),
+            backgroundColor: Colors.green,
+          ),
         );
-        Navigator.pop(context, uploadedDocument);
-        print('DEBUG UPLOAD: Navigator.pop() completed');
+
+        // Clear form
+        _formKey.currentState!.reset();
+        _nameController.clear();
+        _bikeModelsController.clear();
+        _componentsController.clear();
+        _tagsController.clear();
+        setState(() {
+          _selectedFile = null;
+        });
       }
     } catch (e) {
-      print('DEBUG UPLOAD ERROR: Upload failed: $e');
-      print('DEBUG UPLOAD ERROR: Error type: ${e.runtimeType}');
       if (mounted) {
-        setState(() => _isUploading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+        setState(() {
+          _uploadStatus = 'Error: $e';
+          _isUploading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Upload failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -184,183 +162,181 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Upload Document'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.orange,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // File Selection
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Select Document',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _pickFile,
-                        icon: const Icon(Icons.upload_file),
-                        label: Text(
-                          _selectedFile != null
-                              ? 'File Selected'
-                              : 'Choose PDF File',
-                        ),
-                      ),
-                      if (_selectedFile != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'Selected: ${_selectedFile!.name}',
-                          style: const TextStyle(
-                            color: Colors.green,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
+              const Text(
+                'Upload Motorcycle Manual',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              const Text(
+                'Upload PDF documents to be indexed for AI search',
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 32),
 
-              // Document Information
+              // File Picker
               Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Document Information',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Document Name',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.description),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter document name';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _bikeModelsController,
-                        decoration: const InputDecoration(
-                          labelText: 'Bike Models (comma-separated)',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.motorcycle),
-                          hintText: 'e.g., Honda CBR600RR, Yamaha R1',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter at least one bike model';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _componentsController,
-                        decoration: const InputDecoration(
-                          labelText: 'Components (comma-separated)',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.build),
-                          hintText: 'e.g., Engine, Transmission, Brakes',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter at least one component';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _tagsController,
-                        decoration: const InputDecoration(
-                          labelText: 'Tags (comma-separated)',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.tag),
-                          hintText: 'e.g., manual, service, repair',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: _selectedVisibility,
-                        decoration: const InputDecoration(
-                          labelText: 'Visibility',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.visibility),
-                        ),
-                        items: _visibilityOptions.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value.toUpperCase()),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedVisibility = newValue;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select visibility';
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.picture_as_pdf,
+                    size: 40,
+                    color: Colors.orange,
+                  ),
+                  title: Text(
+                    _selectedFile?.name ?? 'No file selected',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: _selectedFile != null
+                      ? Text(
+                          '${(_selectedFile!.size / 1024 / 1024).toStringAsFixed(2)} MB',
+                        )
+                      : const Text('Click to select PDF file'),
+                  trailing: ElevatedButton.icon(
+                    onPressed: _pickFile,
+                    icon: const Icon(Icons.folder_open),
+                    label: const Text('Browse'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 24),
 
+              // Document Name
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Document Name *',
+                  hintText: 'e.g., Harley Davidson FXS 1974 Service Manual',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a document name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Bike Models
+              TextFormField(
+                controller: _bikeModelsController,
+                decoration: const InputDecoration(
+                  labelText: 'Bike Models *',
+                  hintText: 'e.g., FXS 1974, Dyna 2010-2019',
+                  helperText: 'Separate multiple models with commas',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter at least one bike model';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Components
+              TextFormField(
+                controller: _componentsController,
+                decoration: const InputDecoration(
+                  labelText: 'Components',
+                  hintText: 'e.g., Engine, Transmission, Brakes',
+                  helperText: 'Separate multiple components with commas',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Tags
+              TextFormField(
+                controller: _tagsController,
+                decoration: const InputDecoration(
+                  labelText: 'Tags',
+                  hintText: 'e.g., service, manual, repair',
+                  helperText: 'Separate multiple tags with commas',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Visibility
+              DropdownButtonFormField<String>(
+                value: _selectedVisibility,
+                decoration: const InputDecoration(
+                  labelText: 'Visibility',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'public', child: Text('Public')),
+                  DropdownMenuItem(value: 'internal', child: Text('Internal')),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _selectedVisibility = value!;
+                  });
+                },
+              ),
+              const SizedBox(height: 24),
+
+              // Upload Status
+              if (_uploadStatus != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _uploadStatus!.startsWith('Error')
+                        ? Colors.red.shade50
+                        : Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _uploadStatus!,
+                    style: TextStyle(
+                      color: _uploadStatus!.startsWith('Error')
+                          ? Colors.red.shade900
+                          : Colors.green.shade900,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 24),
+
               // Upload Button
               SizedBox(
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _isUploading ? null : _uploadDocument,
-                  child: _isUploading
-                      ? const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  onPressed: _isUploading || _selectedFile == null
+                      ? null
+                      : _uploadDocument,
+                  icon: _isUploading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
                             ),
-                            SizedBox(width: 8),
-                            Text('Uploading...'),
-                          ],
+                          ),
                         )
-                      : const Text('Upload Document'),
+                      : const Icon(Icons.cloud_upload),
+                  label: Text(
+                    _isUploading ? 'Uploading...' : 'Upload Document',
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    textStyle: const TextStyle(fontSize: 18),
+                  ),
                 ),
               ),
             ],

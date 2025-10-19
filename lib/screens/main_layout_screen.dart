@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../widgets/sidebar_navigation.dart';
 import '../screens/ai_chat_screen.dart';
+import '../screens/document_upload_screen.dart';
+import '../screens/home_screen.dart';
 import '../screens/mechanic/mechanic_dashboard_screen.dart';
+import '../screens/settings_screen.dart';
 
 class MainLayoutScreen extends StatefulWidget {
   const MainLayoutScreen({super.key});
@@ -11,7 +14,7 @@ class MainLayoutScreen extends StatefulWidget {
 }
 
 class _MainLayoutScreenState extends State<MainLayoutScreen> {
-  String _currentRoute = '/ai-docs';
+  String _currentRoute = '/manage-documents';
 
   void _handleNavigation(String route) {
     if (route == '/login') {
@@ -31,8 +34,14 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
   Widget _getCurrentScreen() {
     switch (_currentRoute) {
+      case '/upload-document':
+        return const DocumentUploadScreen();
+      case '/manage-documents':
+        return const HomeScreen(showBottomNavigation: false);
       case '/mechanic-dashboard':
         return const MechanicDashboardScreen();
+      case '/settings':
+        return const SettingsScreen();
       case '/ai-docs':
       default:
         return const AIChatScreen();
@@ -57,4 +66,3 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     );
   }
 }
-

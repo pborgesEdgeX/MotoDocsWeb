@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:html' as html;
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import '../models/document.dart';
 import '../models/suggestion.dart';
 import '../models/mechanic.dart';
@@ -146,6 +147,14 @@ class ApiService {
     }
   }
 
+  Future<void> deleteDocument(String docId) async {
+    try {
+      await _dio.delete('/api/v1/documents/$docId');
+    } catch (e) {
+      throw Exception('Failed to delete document: $e');
+    }
+  }
+
   // Upload document
   Future<Map<String, dynamic>> uploadDocument({
     required html.File file,
@@ -258,15 +267,6 @@ class ApiService {
     }
   }
 
-  // Delete document
-  Future<void> deleteDocument(String docId) async {
-    try {
-      await _dio.delete('/api/v1/documents/$docId');
-    } catch (e) {
-      throw Exception('Failed to delete document: $e');
-    }
-  }
-
   // Admin functions
   Future<Map<String, dynamic>> ingestDocument(String docId) async {
     try {
@@ -282,16 +282,24 @@ class ApiService {
   // ============================================================================
 
   // Mechanic Authentication
-  Future<Map<String, dynamic>> registerMechanic(Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> registerMechanic(
+    Map<String, dynamic> data,
+  ) async {
     try {
-      final response = await _dio.post('/api/v1/mechanics/register', data: data);
+      final response = await _dio.post(
+        '/api/v1/mechanics/register',
+        data: data,
+      );
       return response.data;
     } catch (e) {
       throw Exception('Failed to register mechanic: $e');
     }
   }
 
-  Future<Map<String, dynamic>> loginMechanic(String email, String password) async {
+  Future<Map<String, dynamic>> loginMechanic(
+    String email,
+    String password,
+  ) async {
     try {
       final response = await _dio.post(
         '/api/v1/mechanics/login',
@@ -334,7 +342,9 @@ class ApiService {
   }
 
   // Availability Management
-  Future<List<AvailabilitySlot>> getAvailabilitySlots({bool activeOnly = true}) async {
+  Future<List<AvailabilitySlot>> getAvailabilitySlots({
+    bool activeOnly = true,
+  }) async {
     try {
       final response = await _dio.get(
         '/api/v1/mechanics/availability',
@@ -348,7 +358,9 @@ class ApiService {
     }
   }
 
-  Future<AvailabilitySlot> createAvailabilitySlot(Map<String, dynamic> data) async {
+  Future<AvailabilitySlot> createAvailabilitySlot(
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await _dio.post(
         '/api/v1/mechanics/availability',
@@ -480,10 +492,7 @@ class ApiService {
     try {
       final response = await _dio.post(
         '/api/v1/appointments/agora/token',
-        data: {
-          'appointment_id': appointmentId,
-          'user_type': userType,
-        },
+        data: {'appointment_id': appointmentId, 'user_type': userType},
       );
       return response.data;
     } catch (e) {

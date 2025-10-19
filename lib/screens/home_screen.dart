@@ -12,7 +12,12 @@ import 'ai_chat_screen.dart';
 const String FRONTEND_VERSION = '1.1.0-sse-real-time';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final bool showBottomNavigation;
+  
+  const HomeScreen({
+    super.key,
+    this.showBottomNavigation = true,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -24,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false;
   bool _isDeleting = false;
   final SSEService _sseService = SSEService();
+  final ApiService _apiService = ApiService();
   StreamSubscription<DocumentStatusEvent>? _sseSubscription;
   String _backendVersion = 'Loading...';
   bool _versionLoaded = false;
@@ -206,10 +212,10 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       print('DEBUG: Setting auth token for API requests');
-      apiService.setAuthToken(token);
+      _apiService.setAuthToken(token);
 
       print('DEBUG: Fetching documents from API');
-      final documents = await apiService.getDocuments();
+      final documents = await _apiService.getDocuments();
 
       print('DEBUG: Documents loaded successfully: ${documents.length}');
       if (mounted) {
@@ -429,14 +435,16 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.folder), label: 'Documents'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'AI Chat'),
-        ],
-      ),
+      bottomNavigationBar: widget.showBottomNavigation
+          ? BottomNavigationBar(
+              currentIndex: _selectedIndex,
+              onTap: (index) => setState(() => _selectedIndex = index),
+              items: const [
+                BottomNavigationBarItem(icon: Icon(Icons.folder), label: 'Documents'),
+                BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'AI Chat'),
+              ],
+            )
+          : null,
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton(
               onPressed: () async {
@@ -538,7 +546,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text('Components: ${document.components.join(', ')}'),
                   ],
                 ),
-                trailing: _buildStatusChip(document.status),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildStatusChip(document.status),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _showDeleteConfirmation(document),
+                      tooltip: 'Delete document',
+                    ),
+                  ],
+                ),
                 onTap: () {
                   // Show document details
                   _showDocumentDetails(document);
@@ -743,7 +762,7 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
 
-      await apiService.deleteDocument(document.id);
+      await _apiService.deleteDocument(document.id);
 
       if (mounted) {
         // Clear loading snackbar
@@ -940,5 +959,34 @@ class _HomeScreenState extends State<HomeScreen> {
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
         '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}';
+  }
+
+  void _showDeleteConfirmation(Document document) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Document'),
+          content: Text(
+            'Are you sure you want to delete "${document.name}"?\n\n'
+            'This will permanently remove the document and all its data from the system.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteDocument(document);
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

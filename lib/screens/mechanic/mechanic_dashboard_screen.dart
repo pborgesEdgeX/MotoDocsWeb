@@ -17,14 +17,38 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
   List<Appointment> _upcomingAppointments = [];
   bool _loadingAppointments = false;
   bool _togglingAvailability = false;
+  bool _checkingMechanicStatus = true;
 
   @override
   void initState() {
     super.initState();
-    _loadUpcomingAppointments();
+    // Check if user has a mechanic profile by calling the API
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final mechanicAuth = context.read<MechanicAuthService>();
+      try {
+        // Try to refresh the profile from the API
+        await mechanicAuth.refreshProfile();
+        if (mechanicAuth.currentMechanic != null) {
+          _loadUpcomingAppointments();
+        }
+      } catch (e) {
+        // If refresh fails, user is not a mechanic
+        print('No mechanic profile found: $e');
+      } finally {
+        setState(() {
+          _checkingMechanicStatus = false;
+        });
+      }
+    });
   }
 
   Future<void> _loadUpcomingAppointments() async {
+    // Don't try to load if no mechanic profile
+    final mechanicAuth = context.read<MechanicAuthService>();
+    if (mechanicAuth.currentMechanic == null) {
+      return;
+    }
+
     setState(() => _loadingAppointments = true);
 
     try {
@@ -39,7 +63,8 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
       });
     } catch (e) {
       setState(() => _loadingAppointments = false);
-      if (mounted) {
+      // Don't show error if it's just "not a mechanic" error
+      if (mounted && !e.toString().contains('404')) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to load appointments: $e'),
@@ -88,8 +113,77 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
     final mechanicAuth = context.watch<MechanicAuthService>();
     final mechanic = mechanicAuth.currentMechanic;
 
+    // Show loading while checking mechanic status
+    if (_checkingMechanicStatus) {
+      return Scaffold(
+        backgroundColor: Colors.grey.shade50,
+        appBar: AppBar(
+          title: const Text('Mechanic Dashboard'),
+          backgroundColor: Colors.orange.shade700,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     if (mechanic == null) {
-      return const Center(child: Text('Not logged in'));
+      return Scaffold(
+        backgroundColor: Colors.grey.shade50,
+        appBar: AppBar(
+          title: const Text('Mechanic Dashboard'),
+          backgroundColor: Colors.orange.shade700,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: Center(
+          child: Card(
+            margin: const EdgeInsets.all(32),
+            child: Padding(
+              padding: const EdgeInsets.all(48),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.engineering_outlined,
+                    size: 80,
+                    color: Colors.orange.shade300,
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Mechanic Account Not Set Up',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'To access the Mechanic Scheduler, you need to set up your mechanic profile first.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      // Navigate to settings
+                      Navigator.pushNamed(context, '/settings');
+                    },
+                    icon: const Icon(Icons.settings),
+                    label: const Text('Go to Settings'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange.shade700,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      textStyle: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
     }
 
     return Scaffold(
@@ -447,4 +541,3 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
     }
   }
 }
-

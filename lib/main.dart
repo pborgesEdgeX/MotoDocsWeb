@@ -10,8 +10,7 @@ import 'screens/home_screen.dart';
 import 'screens/main_layout_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_success_screen.dart';
-import 'screens/mechanic/auth/mechanic_login_screen.dart';
-import 'screens/mechanic/auth/mechanic_register_screen.dart';
+import 'screens/settings_screen.dart';
 import 'screens/mechanic/mechanic_dashboard_screen.dart';
 import 'screens/mechanic/availability_management_screen.dart';
 import 'screens/mechanic/video_call_screen.dart';
@@ -55,9 +54,8 @@ class MotoDocsApp extends StatelessWidget {
           '/auth': (context) => const AuthScreen(),
           '/home': (context) => const MainLayoutScreen(),
           '/login': (context) => const AuthScreen(),
-          '/mechanic-login': (context) => const MechanicLoginScreen(),
-          '/mechanic-register': (context) => const MechanicRegisterScreen(),
-          '/mechanic-dashboard': (context) => const MechanicDashboardScreen(),
+          '/settings': (context) => const MainLayoutScreen(),
+          '/mechanic-dashboard': (context) => const MainLayoutScreen(),
           '/mechanic-availability': (context) =>
               const AvailabilityManagementScreen(),
           '/ai-docs': (context) => const MainLayoutScreen(),

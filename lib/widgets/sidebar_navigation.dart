@@ -48,10 +48,7 @@ class SidebarNavigation extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Colors.orange.shade700,
-                  Colors.deepOrange.shade600,
-                ],
+                colors: [Colors.orange.shade700, Colors.deepOrange.shade600],
               ),
             ),
             child: Column(
@@ -59,15 +56,26 @@ class SidebarNavigation extends StatelessWidget {
                 CircleAvatar(
                   radius: 40,
                   backgroundColor: Colors.white,
-                  child: isMechanic && mechanicAuthService.currentMechanic?.profilePhotoUrl != null
+                  child:
+                      isMechanic &&
+                          mechanicAuthService
+                                  .currentMechanic
+                                  ?.profilePhotoUrl !=
+                              null
                       ? ClipOval(
                           child: Image.network(
-                            mechanicAuthService.currentMechanic!.profilePhotoUrl!,
+                            mechanicAuthService
+                                .currentMechanic!
+                                .profilePhotoUrl!,
                             width: 80,
                             height: 80,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.person, size: 40, color: Colors.orange),
+                                const Icon(
+                                  Icons.person,
+                                  size: 40,
+                                  color: Colors.orange,
+                                ),
                           ),
                         )
                       : Icon(
@@ -104,7 +112,9 @@ class SidebarNavigation extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: mechanicAuthService.currentMechanic?.isAvailable == true
+                      color:
+                          mechanicAuthService.currentMechanic?.isAvailable ==
+                              true
                           ? Colors.green
                           : Colors.grey,
                       borderRadius: BorderRadius.circular(12),
@@ -134,19 +144,32 @@ class SidebarNavigation extends StatelessWidget {
               children: [
                 _buildNavItem(
                   context,
-                  icon: Icons.auto_stories,
-                  title: 'AI Docs',
+                  icon: Icons.home,
+                  title: 'DocAI',
                   route: '/ai-docs',
                   isActive: currentRoute == '/ai-docs',
                 ),
-                if (isMechanic)
-                  _buildNavItem(
-                    context,
-                    icon: Icons.calendar_month,
-                    title: 'Mechanic Scheduler',
-                    route: '/mechanic-dashboard',
-                    isActive: currentRoute.startsWith('/mechanic'),
-                  ),
+                _buildNavItem(
+                  context,
+                  icon: Icons.folder,
+                  title: 'Manage Documents',
+                  route: '/manage-documents',
+                  isActive: currentRoute == '/manage-documents',
+                ),
+                _buildNavItem(
+                  context,
+                  icon: Icons.upload_file,
+                  title: 'Upload Document',
+                  route: '/upload-document',
+                  isActive: currentRoute == '/upload-document',
+                ),
+                _buildNavItem(
+                  context,
+                  icon: Icons.calendar_month,
+                  title: 'Mechanic Scheduler',
+                  route: '/mechanic-dashboard',
+                  isActive: currentRoute.startsWith('/mechanic'),
+                ),
               ],
             ),
           ),
@@ -210,7 +233,9 @@ class SidebarNavigation extends StatelessWidget {
               children: [
                 Icon(
                   icon,
-                  color: isActive ? Colors.orange.shade700 : Colors.grey.shade600,
+                  color: isActive
+                      ? Colors.orange.shade700
+                      : Colors.grey.shade600,
                   size: 22,
                 ),
                 const SizedBox(width: 12),
@@ -218,8 +243,9 @@ class SidebarNavigation extends StatelessWidget {
                   child: Text(
                     title,
                     style: TextStyle(
-                      color:
-                          isActive ? Colors.orange.shade700 : Colors.grey.shade800,
+                      color: isActive
+                          ? Colors.orange.shade700
+                          : Colors.grey.shade800,
                       fontSize: 15,
                       fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                     ),
@@ -274,4 +300,3 @@ class SidebarNavigation extends StatelessWidget {
     );
   }
 }
-

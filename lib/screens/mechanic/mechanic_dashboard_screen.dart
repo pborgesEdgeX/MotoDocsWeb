@@ -124,7 +124,6 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
       // Filter appointments for today
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
-      final todayEnd = today.add(const Duration(days: 1));
 
       final todayCalls = todayAppointments.where((appointment) {
         final appointmentDate = DateTime(

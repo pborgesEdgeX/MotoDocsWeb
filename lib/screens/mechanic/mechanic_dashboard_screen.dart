@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/appointment.dart';
@@ -19,6 +20,15 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
   bool _togglingAvailability = false;
   bool _checkingMechanicStatus = true;
 
+  // Real Firebase data
+  int _todayCalls = 0;
+  double _thisWeekEarnings = 0.0;
+  bool _loadingStats = false;
+
+  // Real-time updates
+  Timer? _refreshTimer;
+  bool _isConnected = true;
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +40,8 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
         await mechanicAuth.refreshProfile();
         if (mechanicAuth.currentMechanic != null) {
           _loadUpcomingAppointments();
+          _loadRealStats();
+          _startRealTimeUpdates();
         }
       } catch (e) {
         // If refresh fails, user is not a mechanic
@@ -69,6 +81,98 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
           SnackBar(
             content: Text('Failed to load appointments: $e'),
             backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startRealTimeUpdates() {
+    // Refresh data every 30 seconds for real-time updates
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) {
+        _loadUpcomingAppointments();
+        _loadRealStats();
+      }
+    });
+  }
+
+  Future<void> _loadRealStats() async {
+    // Don't try to load if no mechanic profile
+    final mechanicAuth = context.read<MechanicAuthService>();
+    if (mechanicAuth.currentMechanic == null) {
+      return;
+    }
+
+    setState(() => _loadingStats = true);
+
+    try {
+      final apiService = context.read<ApiService>();
+
+      // Get today's appointments
+      final todayAppointments = await apiService.getMechanicAppointments(
+        statusFilter: 'completed',
+        perPage: 100, // Get more to filter by date
+      );
+
+      // Filter appointments for today
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final todayEnd = today.add(const Duration(days: 1));
+
+      final todayCalls = todayAppointments.where((appointment) {
+        final appointmentDate = DateTime(
+          appointment.scheduledTime.year,
+          appointment.scheduledTime.month,
+          appointment.scheduledTime.day,
+        );
+        return appointmentDate.isAtSameMomentAs(today);
+      }).length;
+
+      // Calculate this week's earnings
+      final weekStart = today.subtract(Duration(days: today.weekday - 1));
+      final weekEnd = weekStart.add(const Duration(days: 7));
+
+      final weekAppointments = todayAppointments.where((appointment) {
+        return appointment.scheduledTime.isAfter(weekStart) &&
+            appointment.scheduledTime.isBefore(weekEnd) &&
+            appointment.status == 'completed';
+      }).toList();
+
+      final mechanic = mechanicAuth.currentMechanic!;
+      final thisWeekEarnings = weekAppointments.fold(0.0, (sum, appointment) {
+        // Calculate earnings based on appointment duration and hourly rate
+        final duration = appointment.durationMinutes / 60.0;
+        return sum + (duration * mechanic.hourlyRate);
+      });
+
+      setState(() {
+        _todayCalls = todayCalls;
+        _thisWeekEarnings = thisWeekEarnings;
+        _loadingStats = false;
+        _isConnected = true;
+      });
+    } catch (e) {
+      setState(() {
+        _loadingStats = false;
+        _isConnected = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load stats: $e'),
+            backgroundColor: Colors.orange,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => _loadRealStats(),
+            ),
           ),
         );
       }
@@ -198,6 +302,7 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
         onRefresh: () async {
           await mechanicAuth.refreshProfile();
           await _loadUpcomingAppointments();
+          await _loadRealStats();
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -218,6 +323,40 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
                 'Manage your schedule and upcoming video consultations',
                 style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
               ),
+              const SizedBox(height: 16),
+
+              // Connection Status Indicator
+              if (!_isConnected)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    border: Border.all(color: Colors.red.shade200),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.wifi_off,
+                        color: Colors.red.shade600,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Connection lost - data may not be up to date',
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               const SizedBox(height: 32),
 
               // Quick Availability Toggle
@@ -299,18 +438,22 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
                   Expanded(
                     child: _buildStatCard(
                       'Today\'s Calls',
-                      '3', // TODO: Get from backend
+                      _loadingStats ? '...' : _todayCalls.toString(),
                       Icons.videocam,
                       Colors.blue,
+                      isLoading: _loadingStats,
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildStatCard(
                       'This Week',
-                      '\$${(mechanic.hourlyRate * 6).toStringAsFixed(0)}',
+                      _loadingStats
+                          ? '...'
+                          : '\$${_thisWeekEarnings.toStringAsFixed(0)}',
                       Icons.attach_money,
                       Colors.green,
+                      isLoading: _loadingStats,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -433,8 +576,9 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
     String title,
     String value,
     IconData icon,
-    Color color,
-  ) {
+    Color color, {
+    bool isLoading = false,
+  }) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -454,14 +598,23 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
+            isLoading
+                ? SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    ),
+                  )
+                : Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
           ],
         ),
       ),

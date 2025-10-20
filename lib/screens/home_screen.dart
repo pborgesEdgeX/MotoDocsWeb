@@ -13,11 +13,8 @@ const String FRONTEND_VERSION = '1.1.0-sse-real-time';
 
 class HomeScreen extends StatefulWidget {
   final bool showBottomNavigation;
-  
-  const HomeScreen({
-    super.key,
-    this.showBottomNavigation = true,
-  });
+
+  const HomeScreen({super.key, this.showBottomNavigation = true});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -440,8 +437,14 @@ class _HomeScreenState extends State<HomeScreen> {
               currentIndex: _selectedIndex,
               onTap: (index) => setState(() => _selectedIndex = index),
               items: const [
-                BottomNavigationBarItem(icon: Icon(Icons.folder), label: 'Documents'),
-                BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'AI Chat'),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.folder),
+                  label: 'Documents',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.chat),
+                  label: 'AI Chat',
+                ),
               ],
             )
           : null,

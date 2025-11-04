@@ -45,3 +45,4 @@ app.*.map.json
 
 # Temporary scripts and development files
 scripts/temp/
+web.pid

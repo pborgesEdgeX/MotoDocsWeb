@@ -22,7 +22,7 @@ class SidebarNavigation extends StatelessWidget {
     final isMechanic = mechanicAuthService.isAuthenticated;
     final userName = isMechanic
         ? (mechanicAuthService.currentMechanic?.name ?? 'Mechanic')
-        : (authService.currentUser?.email?.split('@').first ?? 'User');
+        : (authService.currentUser?.email.split('@').first ?? 'User');
     final userEmail = isMechanic
         ? (mechanicAuthService.currentMechanic?.email ?? '')
         : (authService.currentUser?.email ?? '');

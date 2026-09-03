@@ -1,10 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:html' as html;
 import 'package:dio/dio.dart';
-import 'package:file_picker/file_picker.dart';
 import '../models/document.dart';
-import '../models/suggestion.dart';
 import '../models/mechanic.dart';
 import '../models/availability_slot.dart';
 import '../models/appointment.dart';

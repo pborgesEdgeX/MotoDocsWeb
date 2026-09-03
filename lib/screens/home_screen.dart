@@ -188,7 +188,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final apiService = context.read<ApiService>();
       final authService = context.read<AuthService>();
 
       // Get auth token
@@ -641,7 +640,6 @@ class _HomeScreenState extends State<HomeScreen> {
             final step = steps[index];
             final isCompleted = index < currentStepIndex;
             final isCurrent = index == currentStepIndex;
-            final isPending = index > currentStepIndex;
 
             return Expanded(
               child: Column(
@@ -743,8 +741,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final apiService = context.read<ApiService>();
-
       // Show loading indicator
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

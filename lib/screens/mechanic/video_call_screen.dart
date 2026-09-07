@@ -17,7 +17,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   bool _isVideoEnabled = true;
   bool _loading = true;
   String? _error;
-  Map<String, dynamic>? _agoraToken;
 
   @override
   void initState() {
@@ -28,19 +27,17 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   Future<void> _initializeCall() async {
     try {
       final apiService = context.read<ApiService>();
-      final tokenData = await apiService.generateAgoraToken(
+      // Fetch the Agora token to validate the session and surface any errors.
+      // TODO: Store the returned token and initialize the Agora SDK with it
+      // (e.g. await _joinChannel(tokenData)) once real Agora integration lands.
+      await apiService.generateAgoraToken(
         widget.appointment.id,
         'mechanic',
       );
 
       setState(() {
-        _agoraToken = tokenData;
         _loading = false;
       });
-
-      // TODO: Initialize Agora SDK with token
-      // This is a placeholder for actual Agora integration
-      // await _joinChannel(tokenData);
     } catch (e) {
       setState(() {
         _error = e.toString();

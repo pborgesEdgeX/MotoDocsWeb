@@ -58,10 +58,7 @@ class _MechanicLoginScreenState extends State<MechanicLoginScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.orange.shade700,
-              Colors.deepOrange.shade600,
-            ],
+            colors: [Colors.orange.shade700, Colors.deepOrange.shade600],
           ),
         ),
         child: Center(
@@ -210,7 +207,10 @@ class _MechanicLoginScreenState extends State<MechanicLoginScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              Navigator.pushNamed(context, '/mechanic-register');
+                              Navigator.pushNamed(
+                                context,
+                                '/mechanic-register',
+                              );
                             },
                             child: Text(
                               'Register',
@@ -246,4 +246,3 @@ class _MechanicLoginScreenState extends State<MechanicLoginScreen> {
     );
   }
 }
-

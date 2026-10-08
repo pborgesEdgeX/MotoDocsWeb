@@ -44,7 +44,8 @@ class Mechanic {
       email: json['email'] as String,
       name: json['name'] as String,
       phone: json['phone'] as String?,
-      specializations: (json['specializations'] as List<dynamic>?)
+      specializations:
+          (json['specializations'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
@@ -154,7 +155,8 @@ class MechanicPublicInfo {
     return MechanicPublicInfo(
       id: json['id'] as String,
       name: json['name'] as String,
-      specializations: (json['specializations'] as List<dynamic>?)
+      specializations:
+          (json['specializations'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
@@ -168,4 +170,3 @@ class MechanicPublicInfo {
     );
   }
 }
-

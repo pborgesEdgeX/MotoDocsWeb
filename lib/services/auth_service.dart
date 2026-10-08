@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user.dart' as app_user;
@@ -29,12 +30,12 @@ class AuthService extends ChangeNotifier {
             return user != null ? app_user.User.fromFirebase(user) : null;
           })
           .handleError((error) {
-            print('Auth stream error: $error');
+            developer.log('Auth stream error: $error');
             // Return a stream with null user on error
             return null;
           });
     } catch (e) {
-      print('Auth service error: $e');
+      developer.log('Auth service error: $e');
       return Stream.value(null);
     }
   }
@@ -45,30 +46,30 @@ class AuthService extends ChangeNotifier {
     required String password,
   }) async {
     try {
-      print('DEBUG: AuthService - Starting Firebase sign in');
-      print('DEBUG: AuthService - Email: $email');
+      developer.log('DEBUG: AuthService - Starting Firebase sign in');
+      developer.log('DEBUG: AuthService - Email: $email');
 
       final credential = await auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      print('DEBUG: AuthService - Firebase sign in completed');
-      print('DEBUG: AuthService - Credential user: ${credential.user}');
+      developer.log('DEBUG: AuthService - Firebase sign in completed');
+      developer.log('DEBUG: AuthService - Credential user: ${credential.user}');
 
       final user = credential.user != null
           ? app_user.User.fromFirebase(credential.user!)
           : null;
 
-      print('DEBUG: AuthService - Created app user: $user');
-      print('DEBUG: AuthService - Calling notifyListeners()');
+      developer.log('DEBUG: AuthService - Created app user: $user');
+      developer.log('DEBUG: AuthService - Calling notifyListeners()');
 
       notifyListeners();
 
-      print('DEBUG: AuthService - Returning user: $user');
+      developer.log('DEBUG: AuthService - Returning user: $user');
       return user;
     } catch (e) {
-      print('DEBUG: AuthService - Sign in error: $e');
+      developer.log('DEBUG: AuthService - Sign in error: $e');
       throw Exception('Sign in failed: $e');
     }
   }
@@ -102,23 +103,23 @@ class AuthService extends ChangeNotifier {
   // Sign out
   Future<void> signOut() async {
     try {
-      print('═' * 80);
-      print('🔓 AuthService.signOut() called');
-      print('   Current user: ${auth.currentUser?.email}');
-      print('═' * 80);
+      developer.log('═' * 80);
+      developer.log('🔓 AuthService.signOut() called');
+      developer.log('   Current user: ${auth.currentUser?.email}');
+      developer.log('═' * 80);
 
       await auth.signOut();
-      print('✅ Firebase auth.signOut() completed');
-      print('   Current user after signOut: ${auth.currentUser}');
+      developer.log('✅ Firebase auth.signOut() completed');
+      developer.log('   Current user after signOut: ${auth.currentUser}');
 
-      print('📢 Calling notifyListeners()...');
+      developer.log('📢 Calling notifyListeners()...');
       notifyListeners();
-      print('✅ notifyListeners() completed');
-      print('═' * 80);
+      developer.log('✅ notifyListeners() completed');
+      developer.log('═' * 80);
     } catch (e) {
-      print('═' * 80);
-      print('❌ AuthService.signOut() ERROR: $e');
-      print('═' * 80);
+      developer.log('═' * 80);
+      developer.log('❌ AuthService.signOut() ERROR: $e');
+      developer.log('═' * 80);
       throw Exception('Sign out failed: $e');
     }
   }

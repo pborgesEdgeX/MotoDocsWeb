@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 
 void main() {
@@ -34,9 +35,9 @@ class DummyAuthService extends ChangeNotifier {
     required String email,
     required String password,
   }) async {
-    print('DUMMY: Sign In: $email / $password');
+    developer.log('DUMMY: Sign In: $email / $password');
     await Future.delayed(const Duration(seconds: 2)); // Simulate network delay
-    print('DUMMY: Sign in completed');
+    developer.log('DUMMY: Sign in completed');
     notifyListeners();
   }
 
@@ -45,9 +46,9 @@ class DummyAuthService extends ChangeNotifier {
     required String password,
     String? displayName,
   }) async {
-    print('DUMMY: Sign Up: $email / $password / $displayName');
+    developer.log('DUMMY: Sign Up: $email / $password / $displayName');
     await Future.delayed(const Duration(seconds: 2)); // Simulate network delay
-    print('DUMMY: Sign up completed');
+    developer.log('DUMMY: Sign up completed');
     notifyListeners();
   }
 }
@@ -88,16 +89,16 @@ class _AuthScreenNoFirebaseState extends State<AuthScreenNoFirebase>
   }
 
   Future<void> _signIn() async {
-    print('DEBUG: _signIn method called');
+    developer.log('DEBUG: _signIn method called');
     if (!_formKey.currentState!.validate()) {
-      print('DEBUG: Form validation failed');
+      developer.log('DEBUG: Form validation failed');
       return;
     }
-    print('DEBUG: Form validation passed');
+    developer.log('DEBUG: Form validation passed');
 
     setState(() => _isLoading = true);
     try {
-      print(
+      developer.log(
         'DEBUG: Attempting dummy sign in with email: ${_emailController.text.trim()}',
       );
 
@@ -114,7 +115,7 @@ class _AuthScreenNoFirebaseState extends State<AuthScreenNoFirebase>
             },
           );
 
-      print('DEBUG: Dummy sign in successful');
+      developer.log('DEBUG: Dummy sign in successful');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -122,7 +123,7 @@ class _AuthScreenNoFirebaseState extends State<AuthScreenNoFirebase>
         );
       }
     } catch (e) {
-      print('DEBUG: Sign in failed: $e');
+      developer.log('DEBUG: Sign in failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -134,16 +135,16 @@ class _AuthScreenNoFirebaseState extends State<AuthScreenNoFirebase>
   }
 
   Future<void> _signUp() async {
-    print('DEBUG: _signUp method called');
+    developer.log('DEBUG: _signUp method called');
     if (!_formKey.currentState!.validate()) {
-      print('DEBUG: Form validation failed');
+      developer.log('DEBUG: Form validation failed');
       return;
     }
-    print('DEBUG: Form validation passed');
+    developer.log('DEBUG: Form validation passed');
 
     setState(() => _isLoading = true);
     try {
-      print(
+      developer.log(
         'DEBUG: Attempting dummy sign up with email: ${_emailController.text.trim()}',
       );
 
@@ -153,7 +154,7 @@ class _AuthScreenNoFirebaseState extends State<AuthScreenNoFirebase>
         displayName: _nameController.text.trim(),
       );
 
-      print('DEBUG: Dummy sign up successful');
+      developer.log('DEBUG: Dummy sign up successful');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -161,7 +162,7 @@ class _AuthScreenNoFirebaseState extends State<AuthScreenNoFirebase>
         );
       }
     } catch (e) {
-      print('DEBUG: Sign up failed: $e');
+      developer.log('DEBUG: Sign up failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -247,9 +248,9 @@ class _AuthScreenNoFirebaseState extends State<AuthScreenNoFirebase>
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () {
-                                print('DEBUG: Sign In button clicked');
+                                developer.log('DEBUG: Sign In button clicked');
                                 _tabController.animateTo(0);
-                                print(
+                                developer.log(
                                   'DEBUG: Tab controller index: ${_tabController.index}',
                                 );
                               },
@@ -266,9 +267,9 @@ class _AuthScreenNoFirebaseState extends State<AuthScreenNoFirebase>
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () {
-                                print('DEBUG: Sign Up button clicked');
+                                developer.log('DEBUG: Sign Up button clicked');
                                 _tabController.animateTo(1);
-                                print(
+                                developer.log(
                                   'DEBUG: Tab controller index: ${_tabController.index}',
                                 );
                               },
@@ -347,7 +348,7 @@ class _AuthScreenNoFirebaseState extends State<AuthScreenNoFirebase>
             onPressed: _isLoading
                 ? null
                 : () {
-                    print('DEBUG: Sign In form button clicked');
+                    developer.log('DEBUG: Sign In form button clicked');
                     _signIn();
                   },
             child: _isLoading
@@ -428,7 +429,7 @@ class _AuthScreenNoFirebaseState extends State<AuthScreenNoFirebase>
             onPressed: _isLoading
                 ? null
                 : () {
-                    print('DEBUG: Sign Up form button clicked');
+                    developer.log('DEBUG: Sign Up form button clicked');
                     _signUp();
                   },
             child: _isLoading
@@ -440,18 +441,3 @@ class _AuthScreenNoFirebaseState extends State<AuthScreenNoFirebase>
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

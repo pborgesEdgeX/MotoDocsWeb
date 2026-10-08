@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,7 +10,7 @@ import 'document_upload_screen.dart';
 import 'ai_chat_screen.dart';
 
 // Frontend version tracking
-const String FRONTEND_VERSION = '1.1.0-sse-real-time';
+const String frontendVersion = '1.1.0-sse-real-time';
 
 class HomeScreen extends StatefulWidget {
   final bool showBottomNavigation;
@@ -49,13 +50,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final currentUser = authService.currentUser;
 
     if (currentUser == null) {
-      print('DEBUG: HomeScreen - No authenticated user, redirecting to auth');
+      developer.log(
+        'DEBUG: HomeScreen - No authenticated user, redirecting to auth',
+      );
       // Navigate back to auth screen
       Navigator.of(context).pushReplacementNamed('/auth');
       return;
     }
 
-    print('DEBUG: HomeScreen - User authenticated: ${currentUser.email}');
+    developer.log(
+      'DEBUG: HomeScreen - User authenticated: ${currentUser.email}',
+    );
 
     // Proceed with normal initialization
     _loadDocuments();
@@ -67,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _sseService.connect(ApiService.baseUrl);
 
     _sseSubscription = _sseService.statusStream.listen((event) {
-      print(
+      developer.log(
         'DEBUG SSE: Received status update for ${event.docId}: ${event.status} (${event.progress}%)',
       );
       _handleSSEUpdate(event);
@@ -108,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _fetchAndAddDocument(String docId) async {
     // Prevent duplicate fetches
     if (_fetchingDocIds.contains(docId)) {
-      print(
+      developer.log(
         'DEBUG: Already fetching document $docId, skipping duplicate fetch',
       );
       return;
@@ -116,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Check if document already exists in list (race condition protection)
     if (_documents.any((doc) => doc.id == docId)) {
-      print('DEBUG: Document $docId already in list, skipping fetch');
+      developer.log('DEBUG: Document $docId already in list, skipping fetch');
       return;
     }
 
@@ -132,14 +137,16 @@ class _HomeScreenState extends State<HomeScreen> {
           if (!_documents.any((doc) => doc.id == docId)) {
             // Add new document at the beginning of the list
             _documents.insert(0, document);
-            print('DEBUG: Added new document $docId to list');
+            developer.log('DEBUG: Added new document $docId to list');
           } else {
-            print('DEBUG: Document $docId was added while fetching, skipping');
+            developer.log(
+              'DEBUG: Document $docId was added while fetching, skipping',
+            );
           }
         });
       }
     } catch (e) {
-      print('Error fetching document $docId: $e');
+      developer.log('Error fetching document $docId: $e');
     } finally {
       _fetchingDocIds.remove(docId);
     }
@@ -158,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     } catch (e) {
-      print('DEBUG: Failed to load backend version: $e');
+      developer.log('DEBUG: Failed to load backend version: $e');
       if (mounted) {
         setState(() {
           _backendVersion = 'Unknown';
@@ -180,11 +187,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Prevent multiple simultaneous loads
     if (_isLoading) {
-      print('DEBUG: _loadDocuments already in progress, skipping');
+      developer.log('DEBUG: _loadDocuments already in progress, skipping');
       return;
     }
 
-    print('DEBUG: Starting _loadDocuments');
+    developer.log('DEBUG: Starting _loadDocuments');
     setState(() => _isLoading = true);
 
     try {
@@ -194,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final token = await authService.getIdToken();
 
       if (token == null || token.isEmpty) {
-        print('DEBUG: No auth token available, cannot load documents');
+        developer.log('DEBUG: No auth token available, cannot load documents');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -207,13 +214,15 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      print('DEBUG: Setting auth token for API requests');
+      developer.log('DEBUG: Setting auth token for API requests');
       _apiService.setAuthToken(token);
 
-      print('DEBUG: Fetching documents from API');
+      developer.log('DEBUG: Fetching documents from API');
       final documents = await _apiService.getDocuments();
 
-      print('DEBUG: Documents loaded successfully: ${documents.length}');
+      developer.log(
+        'DEBUG: Documents loaded successfully: ${documents.length}',
+      );
       if (mounted) {
         setState(() {
           // Merge new documents with existing ones to preserve SSE status updates
@@ -225,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
             for (var doc in documents) doc.id: doc,
           };
 
-          print(
+          developer.log(
             'DEBUG: Before merge - existing docs: ${existingDocs.length}, new docs from API: ${documents.length}',
           );
 
@@ -239,13 +248,13 @@ class _HomeScreenState extends State<HomeScreen> {
           for (var existingDoc in _documents) {
             if (apiDocs.containsKey(existingDoc.id)) {
               // Document exists in API - keep our version (has SSE updates)
-              print(
+              developer.log(
                 'DEBUG: Keeping existing doc ${existingDoc.id} with status ${existingDoc.status}',
               );
               merged.add(existingDoc);
             } else {
               // Document NOT in API yet (just uploaded, API hasn't returned it yet)
-              print(
+              developer.log(
                 'DEBUG: Keeping just-uploaded doc ${existingDoc.id} with status ${existingDoc.status} (not in API yet)',
               );
               merged.add(existingDoc);
@@ -255,19 +264,19 @@ class _HomeScreenState extends State<HomeScreen> {
           // Then, add new documents from API that we don't have locally
           for (var newDoc in documents) {
             if (!existingDocs.containsKey(newDoc.id)) {
-              print(
+              developer.log(
                 'DEBUG: Adding new doc from API ${newDoc.id} with status ${newDoc.status}',
               );
               merged.add(newDoc);
             }
           }
 
-          print('DEBUG: After merge - total docs: ${merged.length}');
+          developer.log('DEBUG: After merge - total docs: ${merged.length}');
           _documents = merged;
         });
       }
     } catch (e) {
-      print('DEBUG: Error loading documents: $e');
+      developer.log('DEBUG: Error loading documents: $e');
       if (mounted) {
         String errorMessage = 'Failed to load documents';
         if (e.toString().contains('401')) {
@@ -292,15 +301,17 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } finally {
-      print('DEBUG: _loadDocuments completed, setting _isLoading = false');
+      developer.log(
+        'DEBUG: _loadDocuments completed, setting _isLoading = false',
+      );
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _signOut() async {
-    print('═' * 80);
-    print('🚪 SIGN OUT INITIATED');
-    print('═' * 80);
+    developer.log('═' * 80);
+    developer.log('🚪 SIGN OUT INITIATED');
+    developer.log('═' * 80);
 
     // Show a visual indicator that sign out was triggered
     if (mounted) {
@@ -315,24 +326,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final authService = context.read<AuthService>();
-      print('✅ Got AuthService');
+      developer.log('✅ Got AuthService');
 
       // Disconnect SSE before signing out
-      print('📡 Cancelling SSE subscription...');
+      developer.log('📡 Cancelling SSE subscription...');
       _sseSubscription?.cancel();
-      print('📡 Disposing SSE service...');
+      developer.log('📡 Disposing SSE service...');
       _sseService.dispose();
-      print('✅ SSE cleaned up');
+      developer.log('✅ SSE cleaned up');
 
-      print('🔓 Calling authService.signOut()...');
+      developer.log('🔓 Calling authService.signOut()...');
       await authService.signOut();
-      print('✅ authService.signOut() completed');
+      developer.log('✅ authService.signOut() completed');
 
       // Force navigation to auth screen
-      print('🚀 Forcing navigation to /auth...');
+      developer.log('🚀 Forcing navigation to /auth...');
       if (mounted) {
         Navigator.of(context).pushReplacementNamed('/auth');
-        print('✅ Navigated to /auth');
+        developer.log('✅ Navigated to /auth');
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -343,9 +354,9 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } catch (e) {
-      print('═' * 80);
-      print('❌ SIGN OUT ERROR: $e');
-      print('═' * 80);
+      developer.log('═' * 80);
+      developer.log('❌ SIGN OUT ERROR: $e');
+      developer.log('═' * 80);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -371,16 +382,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           PopupMenuButton<String>(
             onSelected: (value) {
-              print('🔘 PopupMenu item selected: $value');
+              developer.log('🔘 PopupMenu item selected: $value');
               if (value == 'signout') {
-                print('🔘 Sign out menu item matched, calling _signOut()');
+                developer.log(
+                  '🔘 Sign out menu item matched, calling _signOut()',
+                );
                 _signOut();
               } else {
-                print('⚠️  Unknown menu value: $value');
+                developer.log('⚠️  Unknown menu value: $value');
               }
             },
             itemBuilder: (context) {
-              print('📋 Building popup menu items');
+              developer.log('📋 Building popup menu items');
               return [
                 const PopupMenuItem(
                   value: 'signout',
@@ -416,7 +429,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Frontend: $FRONTEND_VERSION',
+                  'Frontend: $frontendVersion',
                   style: TextStyle(fontSize: 10, color: Colors.grey[700]),
                 ),
                 const SizedBox(width: 16),
@@ -459,30 +472,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // If a document was uploaded, immediately add it to the list
                 // SSE will automatically update statuses in real-time
-                print('DEBUG HOME: Upload result: $uploadedDocument');
-                print(
+                developer.log('DEBUG HOME: Upload result: $uploadedDocument');
+                developer.log(
                   'DEBUG HOME: Upload result type: ${uploadedDocument.runtimeType}',
                 );
 
                 if (uploadedDocument != null && uploadedDocument is Document) {
-                  print(
+                  developer.log(
                     'DEBUG HOME: Adding document to list: ${uploadedDocument.id}',
                   );
                   setState(() {
                     // Add new document at the beginning of the list
                     _documents.insert(0, uploadedDocument);
                   });
-                  print(
+                  developer.log(
                     'DEBUG HOME: Document added, total documents: ${_documents.length}',
                   );
 
                   // DON'T reload immediately - SSE will handle status updates
                   // The document is already in the list and SSE is connected
-                  print(
+                  developer.log(
                     'DEBUG HOME: Document added to UI, SSE will handle updates',
                   );
                 } else {
-                  print('DEBUG HOME: No document returned from upload');
+                  developer.log('DEBUG HOME: No document returned from upload');
                 }
               },
               child: const Icon(Icons.upload),

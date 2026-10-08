@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -78,13 +79,13 @@ class _AIChatScreenState extends State<AIChatScreen> {
           }
         });
 
-        print(
+        developer.log(
           'Loaded ${_availableBikeModels.length} bike models, ${_availableBikeYears.length} total years, and ${_modelYearsMap.length} model-year relationships',
         );
       }
     } catch (e) {
       setState(() => _loadingBikeModels = false);
-      print('Error loading bike models: $e');
+      developer.log('Error loading bike models: $e');
     }
   }
 
@@ -267,7 +268,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
           final docName =
               ref['doc_name'] ?? ref['doc_id'] ?? 'Unknown Document';
           final confidence = (ref['confidence'] * 100).toStringAsFixed(1);
-          buffer.writeln('• $docName (confidence: ${confidence}%)');
+          buffer.writeln('• $docName (confidence: $confidence%)');
         }
       }
     }
@@ -375,7 +376,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
                                 style: TextStyle(color: Colors.red),
                               )
                             : DropdownButtonFormField<String>(
-                                value: _selectedBikeModel.isEmpty
+                                initialValue: _selectedBikeModel.isEmpty
                                     ? null
                                     : _selectedBikeModel,
                                 decoration: const InputDecoration(
@@ -439,7 +440,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
                                 style: const TextStyle(color: Colors.orange),
                               )
                             : DropdownButtonFormField<String>(
-                                value: _selectedBikeYear.isEmpty
+                                initialValue: _selectedBikeYear.isEmpty
                                     ? null
                                     : _selectedBikeYear,
                                 decoration: const InputDecoration(

@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -102,22 +103,22 @@ class _AuthWrapperState extends State<AuthWrapper> {
     return StreamBuilder(
       stream: Provider.of<AuthService>(context, listen: false).authStateChanges,
       builder: (context, snapshot) {
-        print('═' * 80);
-        print('🔄 AuthWrapper rebuild triggered');
-        print('   ConnectionState: ${snapshot.connectionState}');
-        print('   hasData: ${snapshot.hasData}');
-        print('   hasError: ${snapshot.hasError}');
-        print('   data: ${snapshot.data}');
-        print('   _showLoginAnimation: $_showLoginAnimation');
-        print('   _lastAuthenticatedUserId: $_lastAuthenticatedUserId');
-        print('═' * 80);
+        developer.log('═' * 80);
+        developer.log('🔄 AuthWrapper rebuild triggered');
+        developer.log('   ConnectionState: ${snapshot.connectionState}');
+        developer.log('   hasData: ${snapshot.hasData}');
+        developer.log('   hasError: ${snapshot.hasError}');
+        developer.log('   data: ${snapshot.data}');
+        developer.log('   _showLoginAnimation: $_showLoginAnimation');
+        developer.log('   _lastAuthenticatedUserId: $_lastAuthenticatedUserId');
+        developer.log('═' * 80);
 
         // If there's an error, show auth screen immediately
         if (snapshot.hasError) {
-          print('❌ Auth error: ${snapshot.error}');
+          developer.log('❌ Auth error: ${snapshot.error}');
           _showLoginAnimation = false;
           _lastAuthenticatedUserId = null;
-          print('➡️  Returning AuthScreen (error)');
+          developer.log('➡️  Returning AuthScreen (error)');
           return const AuthScreen();
         }
 
@@ -125,13 +126,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // If we've timed out waiting for auth, force to auth screen
           if (_hasTimedOut) {
-            print('⏱️  Timeout waiting for auth, forcing to AuthScreen');
+            developer.log(
+              '⏱️  Timeout waiting for auth, forcing to AuthScreen',
+            );
             _showLoginAnimation = false;
             _lastAuthenticatedUserId = null;
-            print('➡️  Returning AuthScreen (timeout)');
+            developer.log('➡️  Returning AuthScreen (timeout)');
             return const AuthScreen();
           }
-          print('⏳ Waiting for auth state, showing SplashScreen');
+          developer.log('⏳ Waiting for auth state, showing SplashScreen');
           return const SplashScreen();
         }
 
@@ -139,34 +142,36 @@ class _AuthWrapperState extends State<AuthWrapper> {
         if (snapshot.hasData && snapshot.data != null) {
           final currentUserId = snapshot.data!.uid;
           final currentEmail = snapshot.data!.email;
-          print('✅ User authenticated: $currentEmail (ID: $currentUserId)');
+          developer.log(
+            '✅ User authenticated: $currentEmail (ID: $currentUserId)',
+          );
 
           // Check if this is a new user (different from last time or first login)
           if (_lastAuthenticatedUserId != currentUserId) {
-            print('🎬 New user detected, showing login animation');
-            print('   Previous user ID: $_lastAuthenticatedUserId');
-            print('   Current user ID: $currentUserId');
+            developer.log('🎬 New user detected, showing login animation');
+            developer.log('   Previous user ID: $_lastAuthenticatedUserId');
+            developer.log('   Current user ID: $currentUserId');
             _lastAuthenticatedUserId = currentUserId;
             _showLoginAnimation = true;
-            print('➡️  Returning LoginSuccessScreen');
+            developer.log('➡️  Returning LoginSuccessScreen');
             return const LoginSuccessScreen();
           }
 
           // If we've already shown the animation for this user, go to home
           if (_showLoginAnimation) {
-            print('✨ Animation already shown, resetting flag');
+            developer.log('✨ Animation already shown, resetting flag');
             _showLoginAnimation = false;
           }
 
-          print('🏠 Returning MainLayoutScreen');
+          developer.log('🏠 Returning MainLayoutScreen');
           return const MainLayoutScreen();
         } else {
           // No authenticated user - redirect to auth screen
-          print('🚪 No authenticated user detected');
-          print('   Resetting state variables');
+          developer.log('🚪 No authenticated user detected');
+          developer.log('   Resetting state variables');
           _showLoginAnimation = false;
           _lastAuthenticatedUserId = null;
-          print('➡️  Returning AuthScreen (signed out)');
+          developer.log('➡️  Returning AuthScreen (signed out)');
           return const AuthScreen();
         }
       },

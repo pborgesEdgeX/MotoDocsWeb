@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -45,7 +46,7 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
         }
       } catch (e) {
         // If refresh fails, user is not a mechanic
-        print('No mechanic profile found: $e');
+        developer.log('No mechanic profile found: $e');
       } finally {
         setState(() {
           _checkingMechanicStatus = false;
@@ -419,7 +420,7 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
                           onChanged: _togglingAvailability
                               ? null
                               : _toggleAvailability,
-                          activeColor: Colors.white,
+                          activeThumbColor: Colors.white,
                           activeTrackColor: Colors.green.shade300,
                           inactiveThumbColor: Colors.white,
                           inactiveTrackColor: Colors.grey.shade400,
@@ -664,7 +665,7 @@ class _MechanicDashboardScreenState extends State<MechanicDashboardScreen> {
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       try {
         final apiService = context.read<ApiService>();
         await apiService.updateAppointmentStatus(appointment.id, {

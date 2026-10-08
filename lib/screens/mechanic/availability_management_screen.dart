@@ -140,7 +140,7 @@ class _AvailabilityManagementScreenState
                           await mechanicAuth.toggleAvailability(
                             !mechanic.isAvailable,
                           );
-                          if (mounted) {
+                          if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -348,7 +348,7 @@ class _AvailabilityManagementScreenState
               children: [
                 // Day Selection
                 DropdownButtonFormField<String>(
-                  value: selectedDay,
+                  initialValue: selectedDay,
                   decoration: const InputDecoration(
                     labelText: 'Day of Week',
                     border: OutlineInputBorder(),
@@ -617,7 +617,7 @@ class _AvailabilityManagementScreenState
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       try {
         final apiService = context.read<ApiService>();
         await apiService.deleteAvailabilitySlot(slot.id);
@@ -644,4 +644,3 @@ class _AvailabilityManagementScreenState
     }
   }
 }
-

@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 
 void main() {
@@ -37,7 +38,7 @@ class _ButtonTestHomePageState extends State<ButtonTestHomePage> {
   }
 
   void _onButtonClick(String action) {
-    print('BUTTON TEST: $action clicked');
+    developer.log('BUTTON TEST: $action clicked');
     setState(() {
       _lastAction = '$action clicked at ${DateTime.now().toIso8601String()}';
     });
@@ -49,9 +50,9 @@ class _ButtonTestHomePageState extends State<ButtonTestHomePage> {
   }
 
   void _onSignInClick() {
-    print('BUTTON TEST: Sign In button clicked');
-    print('BUTTON TEST: Email: ${_emailController.text}');
-    print('BUTTON TEST: Password: ${_passwordController.text}');
+    developer.log('BUTTON TEST: Sign In button clicked');
+    developer.log('BUTTON TEST: Email: ${_emailController.text}');
+    developer.log('BUTTON TEST: Password: ${_passwordController.text}');
 
     setState(() {
       _lastAction = 'Sign In clicked - Email: ${_emailController.text}';
@@ -129,18 +130,3 @@ class _ButtonTestHomePageState extends State<ButtonTestHomePage> {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

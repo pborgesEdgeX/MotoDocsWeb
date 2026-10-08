@@ -131,4 +131,3 @@ class Appointment {
         scheduledTime.isBefore(DateTime.now().add(const Duration(minutes: 15)));
   }
 }
-

@@ -1,5 +1,7 @@
+import 'dart:developer' as developer;
 import 'dart:async';
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
+import 'dart:js_interop';
 import 'package:dio/dio.dart';
 import '../models/document.dart';
 import '../models/mechanic.dart';
@@ -161,21 +163,21 @@ class ApiService {
     required List<String> tags,
     String visibility = 'public',
   }) async {
-    print('DEBUG API: uploadDocument() called');
-    print('DEBUG API: file: ${file.name}, name: $name');
-    print(
+    developer.log('DEBUG API: uploadDocument() called');
+    developer.log('DEBUG API: file: ${file.name}, name: $name');
+    developer.log(
       'DEBUG API: bikeModels: $bikeModels, components: $components, tags: $tags, visibility: $visibility',
     );
 
     try {
       // Use a simpler approach for Flutter web - read file as bytes with timeout
-      print('DEBUG API: Reading file bytes with timeout...');
+      developer.log('DEBUG API: Reading file bytes with timeout...');
       final fileBytes = await _readFileAsBytesWithTimeout(file);
-      print(
+      developer.log(
         'DEBUG API: File bytes read successfully, size: ${fileBytes.length}',
       );
 
-      print('DEBUG API: Creating FormData...');
+      developer.log('DEBUG API: Creating FormData...');
       FormData formData = FormData.fromMap({
         'file': MultipartFile.fromBytes(fileBytes, filename: file.name),
         'name': name,
@@ -185,63 +187,30 @@ class ApiService {
         'visibility': visibility,
       });
 
-      print('DEBUG API: Sending POST request to /api/v1/documents/upload...');
+      developer.log(
+        'DEBUG API: Sending POST request to /api/v1/documents/upload...',
+      );
       final response = await _dio.post(
         '/api/v1/documents/upload',
         data: formData,
       );
-      print('DEBUG API: Upload response received: ${response.statusCode}');
-      print('DEBUG API: Response data: ${response.data}');
+      developer.log(
+        'DEBUG API: Upload response received: ${response.statusCode}',
+      );
+      developer.log('DEBUG API: Response data: ${response.data}');
       return response.data;
     } catch (e) {
-      print('DEBUG API ERROR: Upload failed: $e');
+      developer.log('DEBUG API ERROR: Upload failed: $e');
       throw Exception('Failed to upload document: $e');
     }
   }
 
   // Helper method to read file as bytes in Flutter web with timeout
   Future<List<int>> _readFileAsBytesWithTimeout(html.File file) async {
-    final completer = Completer<List<int>>();
-    final reader = html.FileReader();
-    bool completed = false;
-
-    // Set a timeout to prevent hanging
-    Timer(const Duration(seconds: 10), () {
-      if (!completed) {
-        completed = true;
-        completer.completeError('File read timeout after 10 seconds');
-      }
-    });
-
-    reader.onLoad.listen((e) {
-      if (!completed) {
-        completed = true;
-        final result = reader.result;
-        if (result is List<int>) {
-          completer.complete(result);
-        } else {
-          completer.completeError('Failed to read file as bytes');
-        }
-      }
-    });
-
-    reader.onError.listen((e) {
-      if (!completed) {
-        completed = true;
-        completer.completeError('Error reading file: $e');
-      }
-    });
-
-    try {
-      reader.readAsArrayBuffer(file);
-    } catch (e) {
-      if (!completed) {
-        completed = true;
-        completer.completeError('Failed to start reading file: $e');
-      }
-    }
-
-    return completer.future;
+    final buffer = await file.arrayBuffer().toDart.timeout(
+      const Duration(seconds: 10),
+    );
+    return buffer.toDart.asUint8List();
   }
 
   // RAG Suggestions

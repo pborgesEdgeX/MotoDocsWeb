@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lottie/lottie.dart';
@@ -45,7 +46,9 @@ class _AuthScreenState extends State<AuthScreen> {
       final authService = context.read<AuthService>();
 
       if (_isSignIn) {
-        print('DEBUG: Attempting sign in for ${_emailController.text.trim()}');
+        developer.log(
+          'DEBUG: Attempting sign in for ${_emailController.text.trim()}',
+        );
         await authService
             .signInWithEmailAndPassword(
               email: _emailController.text.trim(),
@@ -59,25 +62,27 @@ class _AuthScreenState extends State<AuthScreen> {
                 );
               },
             );
-        print('DEBUG: Sign in successful');
+        developer.log('DEBUG: Sign in successful');
       } else {
-        print('DEBUG: Attempting sign up for ${_emailController.text.trim()}');
+        developer.log(
+          'DEBUG: Attempting sign up for ${_emailController.text.trim()}',
+        );
         await authService.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
           displayName: _nameController.text.trim(),
         );
-        print('DEBUG: Sign up successful');
+        developer.log('DEBUG: Sign up successful');
       }
 
       // Force navigation to home screen after successful authentication
-      print('DEBUG: Forcing navigation to /home...');
+      developer.log('DEBUG: Forcing navigation to /home...');
       if (mounted) {
         Navigator.of(context).pushReplacementNamed('/home');
-        print('DEBUG: Navigated to /home');
+        developer.log('DEBUG: Navigated to /home');
       }
     } catch (e) {
-      print('DEBUG: Auth error: $e');
+      developer.log('DEBUG: Auth error: $e');
       if (mounted) {
         String errorMessage = 'Authentication failed';
         if (e.toString().contains('user-not-found')) {

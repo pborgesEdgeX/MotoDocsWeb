@@ -450,4 +450,3 @@ class _MechanicRegisterScreenState extends State<MechanicRegisterScreen> {
     );
   }
 }
-

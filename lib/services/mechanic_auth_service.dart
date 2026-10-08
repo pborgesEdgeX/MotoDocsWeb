@@ -1,5 +1,6 @@
+import 'dart:developer' as developer;
 import 'dart:convert';
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 import 'package:flutter/foundation.dart';
 import '../models/mechanic.dart';
 import 'api_service.dart';
@@ -25,8 +26,8 @@ class MechanicAuthService extends ChangeNotifier {
 
   void _loadStoredAuth() {
     try {
-      final token = html.window.localStorage['mechanic_token'];
-      final mechanicData = html.window.localStorage['mechanic_data'];
+      final token = html.window.localStorage.getItem('mechanic_token');
+      final mechanicData = html.window.localStorage.getItem('mechanic_data');
 
       if (token != null && mechanicData != null) {
         _mechanicToken = token;
@@ -37,7 +38,7 @@ class MechanicAuthService extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error loading stored auth: $e');
+      developer.log('Error loading stored auth: $e');
     }
   }
 
@@ -63,9 +64,10 @@ class MechanicAuthService extends ChangeNotifier {
       );
 
       // Store in local storage
-      html.window.localStorage['mechanic_token'] = _mechanicToken!;
-      html.window.localStorage['mechanic_data'] = jsonEncode(
-        _currentMechanic!.toJson(),
+      html.window.localStorage.setItem('mechanic_token', _mechanicToken!);
+      html.window.localStorage.setItem(
+        'mechanic_data',
+        jsonEncode(_currentMechanic!.toJson()),
       );
 
       // Set auth token for API calls
@@ -91,16 +93,19 @@ class MechanicAuthService extends ChangeNotifier {
       _currentMechanic = Mechanic.fromJson(responseData);
 
       // Store in local storage (NO token needed - using Firebase auth)
-      html.window.localStorage['mechanic_data'] = jsonEncode(
-        _currentMechanic!.toJson(),
+      html.window.localStorage.setItem(
+        'mechanic_data',
+        jsonEncode(_currentMechanic!.toJson()),
       );
 
-      print('✅ Mechanic registered and saved: ${_currentMechanic!.name}');
+      developer.log(
+        '✅ Mechanic registered and saved: ${_currentMechanic!.name}',
+      );
 
       _isLoading = false;
       notifyListeners();
     } catch (e) {
-      print('❌ Error during registration: $e');
+      developer.log('❌ Error during registration: $e');
       _isLoading = false;
       _errorMessage = e.toString();
       notifyListeners();
@@ -118,19 +123,22 @@ class MechanicAuthService extends ChangeNotifier {
       _currentMechanic = mechanic;
 
       // Update stored data
-      html.window.localStorage['mechanic_data'] = jsonEncode(mechanic.toJson());
+      html.window.localStorage.setItem(
+        'mechanic_data',
+        jsonEncode(mechanic.toJson()),
+      );
 
-      print('✅ Mechanic profile refreshed: ${_currentMechanic!.name}');
+      developer.log('✅ Mechanic profile refreshed: ${_currentMechanic!.name}');
 
       _isLoading = false;
       notifyListeners();
     } catch (e) {
-      print('❌ Error refreshing profile: $e');
+      developer.log('❌ Error refreshing profile: $e');
       // If 404, user is not a mechanic - clear storage
       if (e.toString().contains('404')) {
         _currentMechanic = null;
-        html.window.localStorage.remove('mechanic_data');
-        print('ℹ️ User is not a mechanic - cleared storage');
+        html.window.localStorage.removeItem('mechanic_data');
+        developer.log('ℹ️ User is not a mechanic - cleared storage');
       }
       _isLoading = false;
       _errorMessage = e.toString();
@@ -152,8 +160,9 @@ class MechanicAuthService extends ChangeNotifier {
       _currentMechanic = updatedMechanic;
 
       // Update stored data
-      html.window.localStorage['mechanic_data'] = jsonEncode(
-        updatedMechanic.toJson(),
+      html.window.localStorage.setItem(
+        'mechanic_data',
+        jsonEncode(updatedMechanic.toJson()),
       );
 
       _isLoading = false;
@@ -179,16 +188,19 @@ class MechanicAuthService extends ChangeNotifier {
       _currentMechanic = updatedMechanic;
 
       // Update stored data
-      html.window.localStorage['mechanic_data'] = jsonEncode(
-        updatedMechanic.toJson(),
+      html.window.localStorage.setItem(
+        'mechanic_data',
+        jsonEncode(updatedMechanic.toJson()),
       );
 
-      print('✅ Availability toggled: ${isAvailable ? "ONLINE" : "OFFLINE"}');
+      developer.log(
+        '✅ Availability toggled: ${isAvailable ? "ONLINE" : "OFFLINE"}',
+      );
 
       _isLoading = false;
       notifyListeners();
     } catch (e) {
-      print('❌ Error toggling availability: $e');
+      developer.log('❌ Error toggling availability: $e');
       _isLoading = false;
       _errorMessage = e.toString();
       notifyListeners();
@@ -202,8 +214,8 @@ class MechanicAuthService extends ChangeNotifier {
     _errorMessage = null;
 
     // Clear local storage
-    html.window.localStorage.remove('mechanic_token');
-    html.window.localStorage.remove('mechanic_data');
+    html.window.localStorage.removeItem('mechanic_token');
+    html.window.localStorage.removeItem('mechanic_data');
 
     // Clear API token
     _apiService.clearAuthToken();

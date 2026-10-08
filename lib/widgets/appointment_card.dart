@@ -75,7 +75,10 @@ class AppointmentCard extends StatelessWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: _getStatusColor().withOpacity(0.3), width: 2),
+        side: BorderSide(
+          color: _getStatusColor().withValues(alpha: 0.3),
+          width: 2,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -91,7 +94,7 @@ class AppointmentCard extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: _getStatusColor().withOpacity(0.1),
+                    color: _getStatusColor().withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -294,4 +297,3 @@ class AppointmentCard extends StatelessWidget {
     );
   }
 }
-

@@ -17,7 +17,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   bool _isVideoEnabled = true;
   bool _loading = true;
   String? _error;
-  Map<String, dynamic>? _agoraToken;
 
   @override
   void initState() {
@@ -28,19 +27,14 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   Future<void> _initializeCall() async {
     try {
       final apiService = context.read<ApiService>();
-      final tokenData = await apiService.generateAgoraToken(
-        widget.appointment.id,
-        'mechanic',
-      );
+      // Fetch the Agora token to validate the session and surface any errors.
+      // TODO: Store the returned token and initialize the Agora SDK with it
+      // (e.g. await _joinChannel(tokenData)) once real Agora integration lands.
+      await apiService.generateAgoraToken(widget.appointment.id, 'mechanic');
 
       setState(() {
-        _agoraToken = tokenData;
         _loading = false;
       });
-
-      // TODO: Initialize Agora SDK with token
-      // This is a placeholder for actual Agora integration
-      // await _joinChannel(tokenData);
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -69,7 +63,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
               Text(
                 'Connecting to call...',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 16,
                 ),
               ),
@@ -91,7 +85,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
               Text(
                 'Failed to connect',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -102,7 +96,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                 child: Text(
                   _error!,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
@@ -141,7 +135,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                   Icon(
                     Icons.person,
                     size: 120,
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 24),
                   Text(
@@ -156,7 +150,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                   Text(
                     'Connecting...',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 16,
                     ),
                   ),
@@ -194,7 +188,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                 color: Colors.grey.shade800,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   width: 2,
                 ),
               ),
@@ -204,13 +198,13 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                     child: Icon(
                       Icons.person,
                       size: 60,
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                     ),
                   ),
                   if (!_isVideoEnabled)
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
+                        color: Colors.black.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
@@ -230,7 +224,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
+                        color: Colors.black.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(
@@ -255,7 +249,10 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.black.withOpacity(0.6), Colors.transparent],
+                  colors: [
+                    Colors.black.withValues(alpha: 0.6),
+                    Colors.transparent,
+                  ],
                 ),
               ),
               child: Row(
@@ -272,14 +269,14 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                   const Spacer(),
                   Icon(
                     Icons.timer,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     size: 18,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     '00:00',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -299,7 +296,10 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
-                  colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                  colors: [
+                    Colors.black.withValues(alpha: 0.8),
+                    Colors.transparent,
+                  ],
                 ),
               ),
               child: Row(
@@ -357,7 +357,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Material(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           shape: const CircleBorder(),
           child: InkWell(
             onTap: onPressed,
@@ -374,7 +374,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
@@ -406,7 +406,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       // TODO: Update appointment status to completed
       try {
         final apiService = context.read<ApiService>();
@@ -423,4 +423,3 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     }
   }
 }
-

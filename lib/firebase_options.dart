@@ -16,20 +16,13 @@ import 'package:flutter/foundation.dart'
 /// ```
 class DefaultFirebaseOptions extends FirebaseOptions {
   const DefaultFirebaseOptions._({
-    required this.apiKey,
-    required this.appId,
-    required this.messagingSenderId,
-    required this.projectId,
-    required this.authDomain,
-    required this.storageBucket,
-  }) : super(
-         apiKey: apiKey,
-         appId: appId,
-         messagingSenderId: messagingSenderId,
-         projectId: projectId,
-         authDomain: authDomain,
-         storageBucket: storageBucket,
-       );
+    required super.apiKey,
+    required super.appId,
+    required super.messagingSenderId,
+    required super.projectId,
+    required super.authDomain,
+    required super.storageBucket,
+  });
 
   factory DefaultFirebaseOptions.getCurrentPlatform() {
     if (kIsWeb) {
@@ -100,11 +93,4 @@ class DefaultFirebaseOptions extends FirebaseOptions {
     authDomain: 'motodocs-ai-1759166719.firebaseapp.com',
     storageBucket: 'motodocs-ai-1759166719.appspot.com',
   );
-
-  final String apiKey;
-  final String appId;
-  final String messagingSenderId;
-  final String projectId;
-  final String authDomain;
-  final String storageBucket;
 }

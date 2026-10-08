@@ -24,7 +24,8 @@ class TabTestHomePage extends StatefulWidget {
   State<TabTestHomePage> createState() => _TabTestHomePageState();
 }
 
-class _TabTestHomePageState extends State<TabTestHomePage> with TickerProviderStateMixin {
+class _TabTestHomePageState extends State<TabTestHomePage>
+    with TickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -48,7 +49,9 @@ class _TabTestHomePageState extends State<TabTestHomePage> with TickerProviderSt
 
   void _onButtonClick(String action) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$action button clicked! Tab: ${_tabController.index}')),
+      SnackBar(
+        content: Text('$action button clicked! Tab: ${_tabController.index}'),
+      ),
     );
   }
 
@@ -65,15 +68,20 @@ class _TabTestHomePageState extends State<TabTestHomePage> with TickerProviderSt
               // Tab Header
               Text(
                 _tabController.index == 0 ? 'Sign In Form' : 'Sign Up Form',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20),
-              
+
               // Form Content
-              _tabController.index == 0 ? _buildSignInForm() : _buildSignUpForm(),
-              
+              _tabController.index == 0
+                  ? _buildSignInForm()
+                  : _buildSignUpForm(),
+
               const SizedBox(height: 20),
-              
+
               // Tab Switching Buttons
               Row(
                 children: [
@@ -83,7 +91,9 @@ class _TabTestHomePageState extends State<TabTestHomePage> with TickerProviderSt
                         _tabController.animateTo(0);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _tabController.index == 0 ? Colors.blue : Colors.grey,
+                        backgroundColor: _tabController.index == 0
+                            ? Colors.blue
+                            : Colors.grey,
                         foregroundColor: Colors.white,
                       ),
                       child: const Text('Sign In'),
@@ -96,7 +106,9 @@ class _TabTestHomePageState extends State<TabTestHomePage> with TickerProviderSt
                         _tabController.animateTo(1);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _tabController.index == 1 ? Colors.blue : Colors.grey,
+                        backgroundColor: _tabController.index == 1
+                            ? Colors.blue
+                            : Colors.grey,
                         foregroundColor: Colors.white,
                       ),
                       child: const Text('Sign Up'),
@@ -174,18 +186,3 @@ class _TabTestHomePageState extends State<TabTestHomePage> with TickerProviderSt
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,4 +1,6 @@
-import 'dart:html' as html;
+import 'dart:developer' as developer;
+import 'package:web/web.dart' as html;
+import 'dart:js_interop';
 import 'dart:convert';
 import 'dart:async';
 
@@ -39,41 +41,50 @@ class SSEService {
     disconnect();
 
     final sseUrl = '$baseUrl/api/v1/sse/events';
-    print('DEBUG SSE: Connecting to $sseUrl');
+    developer.log('DEBUG SSE: Connecting to $sseUrl');
 
     try {
       _eventSource = html.EventSource(sseUrl);
 
-      _eventSource!.addEventListener('document_status', (event) {
-        final messageEvent = event as html.MessageEvent;
-        final data = messageEvent.data as String;
+      _eventSource!.addEventListener(
+        'document_status',
+        (html.Event event) {
+          final messageEvent = event as html.MessageEvent;
+          final data = (messageEvent.data as JSString).toDart;
 
-        print('DEBUG SSE: Received document_status event: $data');
+          developer.log('DEBUG SSE: Received document_status event: $data');
 
-        try {
-          final json = jsonDecode(data) as Map<String, dynamic>;
-          final statusEvent = DocumentStatusEvent.fromJson(json);
-          _statusController.add(statusEvent);
-        } catch (e) {
-          print('DEBUG SSE: Error parsing event data: $e');
-        }
-      });
+          try {
+            final json = jsonDecode(data) as Map<String, dynamic>;
+            final statusEvent = DocumentStatusEvent.fromJson(json);
+            _statusController.add(statusEvent);
+          } catch (e) {
+            developer.log('DEBUG SSE: Error parsing event data: $e');
+          }
+        }.toJS,
+      );
 
-      _eventSource!.onOpen.listen((event) {
-        print('DEBUG SSE: Connection opened');
-      });
+      _eventSource!.addEventListener(
+        'open',
+        ((html.Event event) {
+          developer.log('DEBUG SSE: Connection opened');
+        }).toJS,
+      );
 
-      _eventSource!.onError.listen((event) {
-        print('DEBUG SSE: Connection error, will auto-reconnect');
-      });
+      _eventSource!.addEventListener(
+        'error',
+        ((html.Event event) {
+          developer.log('DEBUG SSE: Connection error, will auto-reconnect');
+        }).toJS,
+      );
     } catch (e) {
-      print('DEBUG SSE: Error creating EventSource: $e');
+      developer.log('DEBUG SSE: Error creating EventSource: $e');
     }
   }
 
   void disconnect() {
     if (_eventSource != null) {
-      print('DEBUG SSE: Disconnecting');
+      developer.log('DEBUG SSE: Disconnecting');
       _eventSource!.close();
       _eventSource = null;
     }

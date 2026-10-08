@@ -192,7 +192,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _selectedDuration,
+                  initialValue: _selectedDuration,
                   decoration: const InputDecoration(
                     labelText: 'Default Slot Duration',
                     border: OutlineInputBorder(),
@@ -269,9 +269,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         'specializations': specializations,
       });
 
+      if (!mounted) return;
       // Update mechanic auth service with the response
       final mechanicAuth = context.read<MechanicAuthService>();
       await mechanicAuth.register(response);
+      if (!mounted) return;
 
       setState(() {
         _savingProfile = false;
@@ -381,7 +383,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             value: _isMechanic,
                             onChanged: _toggleMechanicStatus,
-                            activeColor: Colors.green,
+                            activeThumbColor: Colors.green,
                             secondary: Icon(
                               _isMechanic
                                   ? Icons.check_circle
@@ -456,7 +458,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: ElevatedButton.icon(
                       onPressed: () async {
                         await authService.signOut();
-                        if (mounted) {
+                        if (context.mounted) {
                           Navigator.of(context).pushReplacementNamed('/auth');
                         }
                       },

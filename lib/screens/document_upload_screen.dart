@@ -3,10 +3,11 @@ import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
+import 'dart:js_interop';
 
 class DocumentUploadScreen extends StatefulWidget {
-  const DocumentUploadScreen({Key? key}) : super(key: key);
+  const DocumentUploadScreen({super.key});
 
   @override
   State<DocumentUploadScreen> createState() => _DocumentUploadScreenState();
@@ -102,9 +103,9 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
 
       // Convert PlatformFile to html.File for Flutter web
       final htmlFile = html.File(
-        [_selectedFile!.bytes!],
+        [_selectedFile!.bytes!.toJS].toJS,
         _selectedFile!.name,
-        {'type': 'application/pdf'},
+        html.FilePropertyBag(type: 'application/pdf'),
       );
 
       final response = await apiService.uploadDocument(
@@ -272,7 +273,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
 
               // Visibility
               DropdownButtonFormField<String>(
-                value: _selectedVisibility,
+                initialValue: _selectedVisibility,
                 decoration: const InputDecoration(
                   labelText: 'Visibility',
                   border: OutlineInputBorder(),
